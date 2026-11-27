@@ -59,6 +59,7 @@ def main() -> int:
     golden = json.loads(golden_path.read_text(encoding="utf-8"))
     main = report["findings"] + report["set_findings"]
     found = main + [x for f in main for x in f.get("related", [])]  # вложенные замечания тоже есть в отчёте
+    found += report.get("stats", {}).get("secondary", [])  # и краткий список «прочих замечаний»
     hit, miss = [], []
     for g in golden:
         (hit if any(gmatch(g, f["quote"]) for f in found) else miss).append(g)

@@ -349,7 +349,8 @@ def review(llm: LLM, doc: Document, findings: list[Finding]) -> tuple[list[Findi
 
 # потолок критичности по виду дефекта: дубль, «две мысли в одном пункте», термин не ломают реализацию,
 # отсутствие приоритетов или трассировки не делает требования противоречивыми
-CEILING_REQ = {"necessary": "minor", "singular": "minor", "modifiable": "minor", "comprehensible": "minor"}
+CEILING_REQ = {"necessary": "minor", "singular": "minor", "modifiable": "minor", "comprehensible": "minor",
+               "appropriate": "minor"}  # «проектное решение» в одном пункте (схема, имя контроллера) — не блокер
 CEILING_ANY = {"ranked": "major", "traceable": "major", "validatable": "major", "modifiable": "minor"}
 
 
@@ -364,6 +365,36 @@ def calibrate(findings: list[Finding]) -> int:
     return changed
 
 
+def _ids(req_id: str) -> set[str]:
+    return {x.strip() for x in req_id.split(",") if x.strip() and x.strip() != "SET"}
+
+
+def _ids_overlap(a: str, b: str) -> float:
+    ia, ib = _ids(a), _ids(b)
+    return len(ia & ib) / min(len(ia), len(ib)) if ia and ib else 0.0
+
+
+# бюджет главных замечаний: отчёт читает человек — важное наверху, остальное кратким списком, без потерь
+MAIN_RATIO = float(os.getenv("MAIN_RATIO", "0.4"))
+MAIN_MIN = 15
+CRIT_RANK = {c: i for i, c in enumerate(["consistent", "correct", "verifiable", "complete", "unambiguous", "feasible",
+                                         "validatable", "traceable", "ranked", "conforming", "appropriate",
+                                         "comprehensible", "modifiable", "necessary", "singular"])}
+
+
+def budget(per_req: list[Finding], per_set: list[Finding], n_reqs: int) -> tuple[list[Finding], list[Finding], list[dict]]:
+    """Оставляет главными не больше MAIN_RATIO·(число требований) замечаний; остальные уходят в краткий список
+    «прочие замечания» (в отчёте и JSON остаются). Критичные всегда главные."""
+    limit = max(MAIN_MIN, round(MAIN_RATIO * n_reqs))
+    allf = sorted(per_set + per_req, key=lambda f: (ORDER.get(f.severity, 9), f.scope == "requirement",
+                                                    CRIT_RANK.get(f.criterion, 99)))
+    main = [f for i, f in enumerate(allf) if i < limit or f.severity == "critical"]
+    keep = {id(f) for f in main}
+    rest = [{k: getattr(f, k) for k in ("req_id", "criterion", "severity", "quote", "explanation", "fix", "location")}
+            for f in allf if id(f) not in keep]
+    return [f for f in per_req if id(f) in keep], [f for f in per_set if id(f) in keep], rest
+
+
 def consolidate(per_req: list[Finding], per_set: list[Finding]) -> tuple[list[Finding], list[Finding]]:
     """Сокращает шум без потери информации: замечание того же вида на том же месте и лишние замечания
     к одному требованию вкладываются в главное (поле related), а не удаляются.
@@ -373,6 +404,15 @@ def consolidate(per_req: list[Finding], per_set: list[Finding]) -> tuple[list[Fi
     for f in allf:
         host = next((k for k in kept if KIND.get(k.criterion, k.criterion) == KIND.get(f.criterion, f.criterion)
                      and _overlap(k.quote, f.quote) >= 0.5), None)
+        if host is None and f.scope != "requirement":
+            # одно и то же противоречие, описанное разными словами: тот же вид и в основном те же требования
+            host = next((k for k in kept if k.scope != "requirement"
+                         and KIND.get(k.criterion, k.criterion) == KIND.get(f.criterion, f.criterion)
+                         and _ids_overlap(k.req_id, f.req_id) >= 0.5), None)
+        if host is None and f.scope == "requirement":
+            # замечание к требованию, которое уже разобрано в замечании к набору на том же месте
+            host = next((k for k in kept if k.scope != "requirement" and f.req_id in _ids(k.req_id)
+                         and _overlap(k.quote, f.quote) >= 0.7), None)
         if host is None and f.scope == "requirement":
             same = [k for k in kept if k.scope == "requirement" and k.req_id == f.req_id]
             if len(same) >= MAIN_PER_REQ:
