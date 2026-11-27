@@ -19,7 +19,7 @@ except ImportError as _e:
 from . import __version__
 from .ingest import DocumentError, QuoteIndex, load
 from .llm import LLM, LLMError
-from .pipeline import ROOT, PROMPTS, check_requirements, check_set, consolidate, dedupe, extract, make_verdict, rule_checks, verify
+from .pipeline import ROOT, PROMPTS, check_requirements, check_set, consolidate, dedupe, extract, calibrate, make_verdict, review, rule_checks, verify
 from .report import render, render_error, render_error_html, render_html
 from .schema import Passport, Report
 
@@ -117,6 +117,11 @@ def main(argv: list[str] | None = None) -> int:
     per_req, dropped_r = verify(dedupe(per_req), idx)
     per_set, dropped_s = verify(dedupe(per_set + rules), idx)
     dropped = dropped_r + dropped_s
+    reviewed, rejected = review(llm, doc, per_req + per_set)
+    keep = {id(f) for f in reviewed}
+    per_req = [f for f in per_req if id(f) in keep]
+    per_set = [f for f in per_set if id(f) in keep]
+    capped = calibrate(per_req + per_set)
     raw_total = len(per_req) + len(per_set)
     per_req, per_set = consolidate(per_req, per_set)
 
@@ -129,9 +134,12 @@ def main(argv: list[str] | None = None) -> int:
         "critical": sum(f.severity == "critical" for f in allf),
         "major": sum(f.severity == "major" for f in allf),
         "minor": sum(f.severity == "minor" for f in allf),
-        "quotes_checked": len(allf) + len(dropped),
+        "quotes_checked": len(allf) + len(dropped) + len(rejected),
         "quotes_dropped": len(dropped),
         "dropped_examples": [f.quote[:120] for f in dropped[:5]],
+        "review_dropped": len(rejected),
+        "severity_capped": capped,
+        "review_rejected": rejected,
         "warnings": doc.warnings + ([f"Цитаты {sum(not r.quote_verified for r in reqs)} требований не найдены "
                                      "в документе дословно, место для них не указано."]
                                     if any(not r.quote_verified for r in reqs) else []),

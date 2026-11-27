@@ -87,14 +87,14 @@ class LLM:
                 model=self.model,
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    temperature=0.1,
+                    temperature=TEMPERATURE, seed=SEED,
                     response_mime_type="application/json",
                 ),
             )
             return resp.text or ""
         if self.provider == "openai":
             body = json.dumps({
-                "model": self.model, "temperature": 0.1,
+                "model": self.model, "temperature": TEMPERATURE, "seed": SEED,
                 "messages": [{"role": "system", "content": "Отвечай строго одним валидным JSON-объектом без markdown."},
                              {"role": "user", "content": prompt}],
                 "response_format": {"type": "json_object"},
@@ -111,12 +111,18 @@ class LLM:
                 raise RuntimeError(f"{e.code} {e.read()[:300].decode(errors='replace')}") from e
         body = json.dumps({
             "model": self.model, "stream": False, "format": "json",
-            "options": {"temperature": 0.1, "num_ctx": 16384},
+            "options": {"temperature": TEMPERATURE, "seed": SEED, "num_ctx": 16384},
             "messages": [{"role": "user", "content": prompt}],
         }).encode()
         req = urllib.request.Request(f"{self._base}/api/chat", data=body, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=600) as r:
             return json.loads(r.read())["message"]["content"]
+
+
+# воспроизводимость: при temperature=0 и фиксированном seed повторный прогон даёт тот же ответ
+# (у облачных моделей — почти всегда; полную повторяемость даёт кэш ответов .cache/)
+TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0"))
+SEED = int(os.getenv("LLM_SEED", "42"))
 
 
 def _parse_json(raw: str) -> object:
