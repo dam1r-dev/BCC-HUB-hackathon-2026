@@ -55,8 +55,11 @@ def load(path: str | Path) -> Document:
 
 
 def _load_pdf(p: Path) -> Document:
-    import pymupdf
-
+    try:
+        import pymupdf
+    except ImportError as e:
+        raise DocumentError("Для чтения PDF не установлена библиотека pymupdf. "
+                            "Выполните: python -m pip install -r requirements.txt") from e
     try:
         pdf = pymupdf.open(p)
     except Exception as e:  # noqa: BLE001 — pymupdf бросает разные типы на битых файлах
@@ -96,7 +99,7 @@ def _load_docx(p: Path) -> Document:
     try:
         import docx  # python-docx
     except ImportError as e:
-        raise DocumentError("Для .docx установите python-docx: pip install python-docx") from e
+        raise DocumentError("Для чтения .docx не установлена библиотека python-docx. Выполните: python -m pip install -r requirements.txt") from e
     try:
         d = docx.Document(str(p))
     except Exception as e:  # noqa: BLE001

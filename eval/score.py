@@ -47,7 +47,14 @@ def main() -> int:
             s.reconfigure(encoding="utf-8")
         except Exception:  # noqa: BLE001
             pass
+    if len(sys.argv) < 2 or not Path(sys.argv[1]).is_file():
+        print("Использование: python eval/score.py reports/report.json — файл отчёта не найден", file=sys.stderr)
+        return 2
     report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+    if "error" in report:
+        err = report["error"]
+        print(f"Прогон не выполнен ({err.get('stage')}): {err.get('reason')}\nОценивать нечего.", file=sys.stderr)
+        return 2
     golden_path = Path(sys.argv[2] if len(sys.argv) > 2 else Path(__file__).parent / "golden_defects.json")
     golden = json.loads(golden_path.read_text(encoding="utf-8"))
     main = report["findings"] + report["set_findings"]

@@ -8,7 +8,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from dotenv import load_dotenv
+try:  # без зависимостей — понятная подсказка вместо трассировки
+    from dotenv import load_dotenv
+    import jinja2  # noqa: F401
+except ImportError as _e:
+    sys.stderr.write(f"Ошибка: не установлена библиотека «{_e.name}». "
+                     "Выполните: python -m pip install -r requirements.txt\n")
+    raise SystemExit(2) from None
 
 from . import __version__
 from .ingest import DocumentError, QuoteIndex, load
@@ -96,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         per_req = check_requirements(llm, doc, reqs, criteria)
         per_set = check_set(llm, doc, reqs, criteria)
     except LLMError as e:
-        return fail("обращение к модели", str(e), 3)
+        return fail("обращение к модели", str(e), 2 if str(e).startswith("Провайдер отклонил") else 3)
     rules = rule_checks(doc)
 
     print("4/4 Проверяю цитаты и собираю отчёт…", file=sys.stderr)

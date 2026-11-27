@@ -32,8 +32,9 @@ class LLM:
             self._client = genai.Client(api_key=key)
         elif self.provider == "openai":  # любой OpenAI-совместимый API: Groq, OpenRouter, OpenAI…
             self._key = os.getenv("OPENAI_API_KEY", "")
-            if not self._key:
-                raise LLMError("Не задан OPENAI_API_KEY для LLM_PROVIDER=openai")
+            if not self._key or self._key.startswith("your_"):
+                raise LLMError("Не задан OPENAI_API_KEY: в .env осталась заглушка из .env.example. "
+                               "Получите ключ на https://console.groq.com/keys и вставьте его в .env")
             self._base = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
             self.model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         elif self.provider == "ollama":
@@ -67,7 +68,7 @@ class LLM:
                 return data
             except Exception as e:  # noqa: BLE001 — сеть, лимиты, битый JSON
                 last_err = e
-                if re.match(r"^(401|403|404)", str(e)) or any(c in str(e) for c in ("PERMISSION_DENIED", "API_KEY_INVALID", "model_not_found")):
+                if re.match(r"^(401|403|404)\b", str(e)) or any(c in str(e) for c in ("PERMISSION_DENIED", "API_KEY_INVALID", "model_not_found", "invalid_api_key")):
                     raise LLMError(f"Провайдер отклонил запрос (ключ или доступ): {str(e)[:300]}") from e
                 wait = _retry_delay(e, attempt)
                 print(f"  [{label}] попытка {attempt + 1} не удалась: {str(e)[:160]} — жду {wait:.0f} с", file=sys.stderr)
