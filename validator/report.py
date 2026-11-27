@@ -16,6 +16,17 @@ def _cell(s: str) -> str:
     return " ".join(str(s).split()).replace("|", "\\|")
 
 
+def render_error(document: str, date: str, model: str, version: str, stage: str, reason: str) -> str:
+    """Короткий отчёт, когда проверку выполнить нельзя: читатель видит причину, а не пустой файл."""
+    return (f"# Отчёт о проверке требований\n\n"
+            f"## Проверка не выполнена\n\n"
+            f"| Поле | Значение |\n| :--- | :--- |\n"
+            f"| Документ | {_cell(document)} |\n| Дата прогона | {date} |\n| Модель | {_cell(model)} |\n"
+            f"| Версия агента | {version} |\n| Этап | {stage} |\n\n"
+            f"**Причина:** {reason}\n\n"
+            f"Вывод о готовности документа к разработке не сделан: исправьте причину и запустите прогон снова.\n")
+
+
 def render(report: Report) -> str:
     env = Environment(loader=FileSystemLoader(ROOT / "templates"), trim_blocks=True, lstrip_blocks=True,
                       keep_trailing_newline=True)

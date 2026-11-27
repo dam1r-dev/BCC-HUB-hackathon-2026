@@ -11,10 +11,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from . import __version__
-from .ingest import QuoteIndex, load
+from .ingest import DocumentError, QuoteIndex, load
 from .llm import LLM, LLMError
 from .pipeline import ROOT, PROMPTS, check_requirements, check_set, dedupe, extract, make_verdict, rule_checks, verify
-from .report import render
+from .report import render, render_error
 from .schema import Passport, Report
 
 
@@ -47,24 +47,56 @@ def main(argv: list[str] | None = None) -> int:
         import os
         os.environ["LLM_CACHE"] = "0"
 
+    out = Path(args.output)
+    started = datetime.now().strftime("%Y-%m-%d %H:%M")
+    model_name = "—"
+
+    def fail(stage: str, reason: str, code: int) -> int:
+        """Ошибку видно и в консоли, и в файле отчёта — чтобы по отчёту было понятно, почему проверки нет."""
+        print(f"Ошибка ({stage}): {reason}", file=sys.stderr)
+        try:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(render_error(Path(args.input).name, started, model_name, f"{__version__} ({_commit()})",
+                                        stage, reason), encoding="utf-8")
+            out.with_suffix(".json").write_text(json.dumps(
+                {"error": {"stage": stage, "reason": reason}, "document": Path(args.input).name, "date": started},
+                ensure_ascii=False, indent=1), encoding="utf-8")
+            print(f"Причина записана в {out}", file=sys.stderr)
+        except OSError as e:
+            print(f"Отчёт записать не удалось: {e}", file=sys.stderr)
+        return code
+
+    if out.suffix.lower() != ".md":
+        print(f"Ошибка: файл отчёта должен быть .md, получено «{out.name}»", file=sys.stderr)
+        return 2
     try:
         doc = load(args.input)
+    except DocumentError as e:
+        return fail("чтение документа", str(e), 2)
+    except Exception as e:  # noqa: BLE001 — любой неожиданный сбой чтения показываем, а не роняем трассировкой
+        return fail("чтение документа", f"не удалось прочитать файл: {type(e).__name__}: {e}", 2)
+    try:
         llm = LLM()
-    except (FileNotFoundError, ValueError, RuntimeError, LLMError) as e:
-        print(f"Ошибка: {e}", file=sys.stderr)
-        return 2
+    except LLMError as e:
+        return fail("подключение к модели", str(e), 2)
+    model_name = llm.name
 
     print(f"Документ: {doc.name} · модель: {llm.name}", file=sys.stderr)
+    for w in doc.warnings:
+        print(f"Предупреждение: {w}", file=sys.stderr)
     idx = QuoteIndex(doc)
     criteria = (PROMPTS / "criteria.md").read_text(encoding="utf-8")
 
     try:
         reqs = extract(llm, doc, idx)
+        if not reqs:
+            return fail("нарезка на требования",
+                        "модель не нашла в документе ни одного требования. Проверьте, что передан документ "
+                        "требований, а не другой файл.", 4)
         per_req = check_requirements(llm, doc, reqs, criteria)
         per_set = check_set(llm, doc, reqs, criteria)
     except LLMError as e:
-        print(f"Ошибка: {e}", file=sys.stderr)
-        return 3
+        return fail("обращение к модели", str(e), 3)
     rules = rule_checks(doc)
 
     print("4/4 Проверяю цитаты и собираю отчёт…", file=sys.stderr)
@@ -82,6 +114,9 @@ def main(argv: list[str] | None = None) -> int:
         "quotes_checked": len(allf) + len(dropped),
         "quotes_dropped": len(dropped),
         "dropped_examples": [f.quote[:120] for f in dropped[:5]],
+        "warnings": doc.warnings + ([f"Цитаты {sum(not r.quote_verified for r in reqs)} требований не найдены "
+                                     "в документе дословно, место для них не указано."]
+                                    if any(not r.quote_verified for r in reqs) else []),
     }
     report = Report(
         passport=Passport(document=doc.name, date=datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -90,7 +125,6 @@ def main(argv: list[str] | None = None) -> int:
         verdict=make_verdict(reqs, per_req, per_set), stats=stats,
     )
 
-    out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(render(report), encoding="utf-8")
     out.with_suffix(".json").write_text(json.dumps(report.to_dict(), ensure_ascii=False, indent=1), encoding="utf-8")
