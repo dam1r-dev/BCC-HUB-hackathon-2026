@@ -1,4 +1,4 @@
-"""Веб-приложение агента проверки требований (интерфейс — web/index.html).
+"""TekserAI — веб-приложение агента проверки требований (интерфейс — web/index.html).
 
 Запуск:  python app.py            (откроется http://127.0.0.1:8000)
          python app.py --port 8080 --no-browser
@@ -158,10 +158,10 @@ def _new_run(filename: str, data: bytes, no_cache: bool) -> str:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "ReqValidator/1.0"
+    server_version = "TekserAI/1.0"
 
     def log_message(self, fmt: str, *args) -> None:  # тише в консоли
-        if args and str(args[1]).startswith(("4", "5")):
+        if args and str(args[1]).startswith(("4", "5")) and "/logo" not in str(args[0]):
             super().log_message(fmt, *args)
 
     def _send(self, code: int, body: bytes, ctype: str, extra: dict | None = None) -> None:
@@ -189,6 +189,12 @@ class Handler(BaseHTTPRequestHandler):
             if not WEB.exists():
                 return self._err(500, "нет файла web/index.html")
             return self._send(200, WEB.read_bytes(), "text/html; charset=utf-8")
+        if parts == ["logo"]:  # логотип: положите web/logo.svg (или .png/.webp) — подхватится сам
+            for name, ctype in (("logo.svg", "image/svg+xml"), ("logo.png", "image/png"), ("logo.webp", "image/webp")):
+                f = ROOT / "web" / name
+                if f.exists():
+                    return self._send(200, f.read_bytes(), ctype)
+            return self._err(404, "логотипа нет")
         if parts == ["api", "info"]:
             return self._json({"model": _env_model(), "sample": SAMPLE.exists(), "sample_name": SAMPLE.name})
         if parts == ["api", "runs"]:
@@ -287,7 +293,7 @@ def main() -> int:
     RUNS.mkdir(parents=True, exist_ok=True)
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     url = f"http://{'127.0.0.1' if args.host in ('0.0.0.0', '') else args.host}:{args.port}"
-    print(f"Агент проверки требований: {url}  (модель: {_env_model()}). Остановить — Ctrl+C")
+    print(f"TekserAI — проверка требований: {url}  (модель: {_env_model()}). Остановить — Ctrl+C")
     if not args.no_browser:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
     try:
