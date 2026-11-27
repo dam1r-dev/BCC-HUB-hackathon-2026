@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Агент проверки требований</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f5bea'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f5f6f8;--panel:#fff;--fg:#14171c;--muted:#667085;--faint:#98a2b3;--line:#e4e7ec;--soft:#f2f4f7;--soft2:#eaecf0;
+  --acc:#2f5bea;--acc-soft:#eef2ff;--acc-fg:#fff;
+  --crit:#d92d20;--crit-soft:#fef3f2;--major:#c4690b;--major-soft:#fff6ed;--minor:#475467;--minor-soft:#f2f4f7;
+  --ok:#079455;--ok-soft:#ecfdf3;
+  --shadow:0 1px 2px rgba(16,24,40,.05);--shadow-lg:0 12px 32px -12px rgba(16,24,40,.18);
+  --r:14px;--mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0e1116;--panel:#161a21;--fg:#e9edf2;--muted:#a0a8b5;--faint:#6b7380;--line:#262c35;--soft:#1c212a;--soft2:#232934;
+  --acc:#6d8cff;--acc-soft:#1c2440;--acc-fg:#0b0e13;
+  --crit:#ff6b5e;--crit-soft:#2a1716;--major:#f5a54a;--major-soft:#2a1f12;--minor:#a0a8b5;--minor-soft:#1f242c;
+  --ok:#3ccf8e;--ok-soft:#10241b;--shadow:none;--shadow-lg:0 12px 32px -12px rgba(0,0,0,.6);
+}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:14.5px/1.55 Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:inherit;color:inherit}
+.hidden{display:none!important}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1320px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em;color:var(--fg)}
+.brand:hover{text-decoration:none}
+.logo{width:30px;height:30px;border-radius:9px;background:var(--acc);display:grid;place-items:center;color:#fff}
+.nav{display:flex;gap:4px;margin-left:8px}
+.nav a{padding:7px 12px;border-radius:9px;color:var(--muted);font-weight:500}
+.nav a:hover{background:var(--soft);text-decoration:none;color:var(--fg)}
+.nav a.on{background:var(--soft2);color:var(--fg)}
+.model{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:999px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}.dot.off{background:var(--crit)}
+
+main{max-width:1320px;margin:0 auto;padding:28px 24px 80px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);padding:9px 15px;border-radius:10px;cursor:pointer;font-weight:500;transition:.15s;white-space:nowrap}
+.btn:hover{background:var(--soft);text-decoration:none}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-fg)}
+.btn.primary:hover{filter:brightness(1.07);background:var(--acc)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.danger{color:var(--crit)}
+.btn:disabled{opacity:.45;cursor:default;filter:none}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:9px}
+.muted{color:var(--muted)}.faint{color:var(--faint)}
+h1{font-size:28px;letter-spacing:-.02em;margin:0;line-height:1.2}
+h2{font-size:18px;letter-spacing:-.01em;margin:0}
+
+/* new check */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:start}
+@media(max-width:980px){.hero{grid-template-columns:1fr}}
+.hero h1{font-size:38px;margin-bottom:10px}
+.lead{font-size:16px;color:var(--muted);max-width:560px;margin:0 0 22px}
+.drop{position:relative;border:2px dashed var(--line);border-radius:18px;padding:38px 24px;text-align:center;background:var(--panel);cursor:pointer;transition:.18s}
+.drop:hover,.drop.over{border-color:var(--acc);background:var(--acc-soft)}
+.drop .ic{width:52px;height:52px;margin:0 auto 12px;border-radius:14px;background:var(--acc-soft);color:var(--acc);display:grid;place-items:center}
+.drop b{font-size:17px;display:block}
+.chosen{display:flex;align-items:center;gap:12px;text-align:left;margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--soft);cursor:default}
+.chosen .fi{width:38px;height:38px;border-radius:10px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--acc)}
+.opts{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:16px}
+.chk{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:13.5px;cursor:pointer}
+.chk input{accent-color:var(--acc);width:15px;height:15px}
+.sample{display:flex;gap:14px;align-items:center;padding:16px;margin-top:14px}
+.sample .fi{width:44px;height:52px;border-radius:8px;background:var(--crit-soft);color:var(--crit);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+.feat{display:grid;gap:12px}
+.feat .f{display:flex;gap:14px;padding:16px 18px}
+.feat .f .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--acc-soft);color:var(--acc)}
+.feat .f b{display:block;margin-bottom:2px}
+.feat .f p{margin:0;color:var(--muted);font-size:13.5px}
+.recent{margin-top:34px}
+.sechead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+
+/* run */
+.runwrap{max-width:760px;margin:20px auto}
+.runcard{padding:30px}
+.runhead{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.spinner{width:22px;height:22px;border-radius:50%;border:3px solid var(--acc-soft);border-top-color:var(--acc);animation:spin .9s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.timer{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--muted);background:var(--soft);padding:4px 10px;border-radius:8px}
+.steps{display:grid;gap:0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:14px;position:relative;padding-bottom:22px}
+.step:last-child{padding-bottom:0}
+.step:not(:last-child)::after{content:"";position:absolute;left:16px;top:34px;bottom:2px;width:2px;background:var(--line)}
+.step.done:not(:last-child)::after{background:var(--ok)}
+.bullet{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);background:var(--panel);color:var(--faint);font-weight:600;font-size:13px;z-index:1}
+.step.done .bullet{background:var(--ok);border-color:var(--ok);color:#fff}
+.step.on .bullet{border-color:var(--acc);color:var(--acc);box-shadow:0 0 0 5px var(--acc-soft)}
+.step.bad .bullet{background:var(--crit);border-color:var(--crit);color:#fff}
+.step .t{font-weight:600;padding-top:5px}.step .d{color:var(--muted);font-size:13px}
+.sub{margin-top:8px;height:5px;border-radius:3px;background:var(--soft2);overflow:hidden}
+.sub i{display:block;height:100%;background:var(--acc);border-radius:3px;transition:width .4s}
+details.log{margin-top:24px;border-top:1px solid var(--line);padding-top:14px}
+details.log summary{cursor:pointer;color:var(--muted);font-size:13px}
+details.log pre{background:var(--soft);border-radius:10px;padding:12px;font:12px/1.5 var(--mono);max-height:240px;overflow:auto;white-space:pre-wrap;margin:10px 0 0}
+.errbox{margin-top:22px;padding:16px 18px;border-radius:12px;background:var(--crit-soft);color:var(--crit);border:1px solid color-mix(in srgb,var(--crit) 30%,transparent)}
+.errbox b{display:block;margin-bottom:4px}
+
+/* report */
+.rhead{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.rhead .meta{color:var(--muted);font-size:13px;margin-top:6px;display:flex;gap:6px 14px;flex-wrap:wrap}
+.rhead .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.verdict{display:flex;gap:16px;align-items:flex-start;padding:18px 20px;border-left:4px solid var(--crit);margin-bottom:16px}
+.verdict.ok{border-left-color:var(--ok)}
+.verdict .vi{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--crit-soft);color:var(--crit);flex:none}
+.verdict.ok .vi{background:var(--ok-soft);color:var(--ok)}
+.verdict b{font-size:16px;display:block;margin-bottom:2px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:12px}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{padding:14px 16px;cursor:default}
+.kpi.click{cursor:pointer}.kpi.click:hover{border-color:var(--acc)}
+.kpi .v{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.kpi .l{color:var(--muted);font-size:12.5px;margin-top:4px}
+.v.crit{color:var(--crit)}.v.major{color:var(--major)}.v.ok{color:var(--ok)}
+.sevbar{display:flex;height:8px;border-radius:5px;overflow:hidden;background:var(--soft2);margin-bottom:22px}
+.sevbar i{display:block}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.tab{padding:10px 14px;border:0;background:none;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--fg)}
+.tab.on{color:var(--fg);border-bottom-color:var(--acc)}
+.tab .n{font-size:12px;background:var(--soft2);border-radius:999px;padding:1px 7px;margin-left:6px;color:var(--muted)}
+
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:1060px){.split{grid-template-columns:1fr}.docpane{display:none}}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip:hover{background:var(--soft)}
+.chip.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip .c{font-size:11.5px;opacity:.7}
+.sel,.search{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;color:var(--fg)}
+.search{flex:1;min-width:160px}
+.activef{display:inline-flex;align-items:center;gap:6px;background:var(--acc-soft);color:var(--acc);border-radius:999px;padding:4px 6px 4px 11px;font-size:13px;font-weight:500}
+.activef button{border:0;background:none;cursor:pointer;color:inherit;padding:0 4px;font-size:15px;line-height:1}
+.list{display:grid;gap:10px;scroll-margin-top:84px}
+.ln .tx.hd{font-weight:700}.ln .tx.sep{color:var(--faint)}
+.fcard{padding:14px 16px;cursor:pointer;transition:.12s;border-left:3px solid var(--line)}
+.fcard:hover{border-color:var(--soft2);box-shadow:var(--shadow-lg)}
+.fcard.s-critical{border-left-color:var(--crit)}.fcard.s-major{border-left-color:var(--major)}.fcard.s-minor{border-left-color:var(--minor)}
+.fcard.sel{outline:2px solid var(--acc);outline-offset:-1px}
+.fhead{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin-bottom:8px}
+.badge{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px}
+.b-critical{background:var(--crit-soft);color:var(--crit)}.b-major{background:var(--major-soft);color:var(--major)}.b-minor{background:var(--minor-soft);color:var(--minor)}
+.b-set{background:var(--acc-soft);color:var(--acc)}
+.crit{font-weight:600}
+.rid{font:11.5px var(--mono);background:var(--soft);padding:2px 6px;border-radius:6px;color:var(--muted)}
+.loc{font-size:12px;color:var(--faint);margin-left:auto}
+.quote{background:var(--soft);border-radius:9px;padding:8px 11px;font-size:13.5px;margin-bottom:8px;position:relative}
+.quote::before{content:"«";color:var(--faint)}.quote::after{content:"»";color:var(--faint)}
+.kv{display:grid;grid-template-columns:82px 1fr;gap:4px 10px;font-size:13.5px}
+.kv .k{color:var(--muted)}
+.kv .fix{color:var(--ok)}
+.rel{margin-top:8px;font-size:12.5px;color:var(--muted)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+
+.docpane{position:sticky;top:78px;max-height:calc(100vh - 100px);display:flex;flex-direction:column}
+.docpane .dh{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;font-size:13px}
+.doc{overflow:auto;padding:8px 0;font-size:13px;line-height:1.6}
+.ln{display:grid;grid-template-columns:46px 1fr;padding:1px 14px 1px 0;border-left:3px solid transparent}
+.ln .no{color:var(--faint);text-align:right;padding-right:12px;font:11.5px/1.95 var(--mono);user-select:none}
+.ln .tx{white-space:pre-wrap;word-break:break-word}
+.ln.h-critical{background:var(--crit-soft);border-left-color:var(--crit);cursor:pointer}
+.ln.h-major{background:var(--major-soft);border-left-color:var(--major);cursor:pointer}
+.ln.h-minor{background:var(--minor-soft);border-left-color:var(--minor);cursor:pointer}
+.ln.focus{box-shadow:inset 0 0 0 2px var(--acc)}
+.ln .cnt{float:right;font-size:11px;font-weight:700;border-radius:999px;padding:0 6px;margin-left:8px;background:var(--panel);color:var(--muted)}
+.pg{margin:10px 14px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);display:flex;align-items:center;gap:10px}
+.pg::after{content:"";flex:1;height:1px;background:var(--line)}
+@keyframes flash{0%{box-shadow:inset 0 0 0 9999px color-mix(in srgb,var(--acc) 25%,transparent)}100%{box-shadow:inset 0 0 0 9999px transparent}}
+.ln.flash{animation:flash 1.2s ease-out}
+
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+table.t th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--soft);position:sticky;top:0}
+table.t td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t tr.click{cursor:pointer}table.t tr.click:hover td{background:var(--soft)}
+.tablewrap{overflow:auto;max-height:72vh;border-radius:var(--r)}
+.fixes{counter-reset:f;display:grid;gap:12px}
+.fx{padding:16px 18px 16px 58px;position:relative}
+.fx::before{counter-increment:f;content:counter(f);position:absolute;left:18px;top:16px;width:26px;height:26px;border-radius:50%;background:var(--acc-soft);color:var(--acc);display:grid;place-items:center;font-weight:700;font-size:13px}
+.fx .m{font-size:12px;color:var(--faint);margin-bottom:4px;font-family:var(--mono)}
+.fx .p{margin-bottom:6px}.fx .s{color:var(--ok)}
+.passport{display:grid;grid-template-columns:180px 1fr;gap:8px 16px;padding:18px 20px;font-size:13.5px}
+.passport .k{color:var(--muted)}
+
+/* history */
+.hrow{display:grid;grid-template-columns:minmax(0,2.2fr) 1.1fr 1fr 1.3fr auto;gap:16px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer}
+.hrow:last-child{border-bottom:0}
+.hrow:hover{background:var(--soft)}
+.hrow.head{cursor:default;background:none;font-size:12px;color:var(--muted);font-weight:600;padding-top:12px;padding-bottom:10px}
+.hrow .name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .sub2{font-size:12.5px;color:var(--muted)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:999px}
+.st.run{background:var(--acc-soft);color:var(--acc)}.st.bad{background:var(--crit-soft);color:var(--crit)}
+.st.ok{background:var(--ok-soft);color:var(--ok)}.st.warn{background:var(--major-soft);color:var(--major)}
+@media(max-width:820px){.hrow{grid-template-columns:1fr auto}.hrow>:nth-child(2),.hrow>:nth-child(3),.hrow>:nth-child(4){display:none}}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13.5px;box-shadow:var(--shadow-lg);z-index:50}
+@media print{.top,.tabs,.filters,.rhead .acts,.docpane{display:none!important}.split{display:block}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <a class="brand" href="#/"><span class="logo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Агент проверки требований</a>
+  <nav class="nav"><a href="#/" data-nav="new">Новая проверка</a><a href="#/history" data-nav="history">История</a></nav>
+  <div class="model" title="Модель из файла .env"><span class="dot" id="mdot"></span><span id="mname">…</span></div>
+</div></header>
+<main id="view"></main>
+<div class="toast hidden" id="toast"></div>
+
+<script>
+"use strict";
+const CRIT={necessary:"Необходимость",appropriate:"Уместность уровня",unambiguous:"Однозначность",complete:"Полнота",singular:"Единичность",feasible:"Выполнимость",verifiable:"Проверяемость",correct:"Корректность",conforming:"Соответствие шаблону",consistent:"Непротиворечивость",traceable:"Трассируемость",comprehensible:"Понятность"};
+const SEV={critical:"критичный",major:"существенный",minor:"незначительный"};
+const SEVN={critical:"Критичные",major:"Существенные",minor:"Незначительные"};
+const RANK={critical:3,major:2,minor:1};
+const STEPS=[["Нарезка на требования","Модель выделяет отдельные требования и их место в документе"],
+             ["Проверка каждого требования","12 критериев ISO/IEC/IEEE 29148 п. 5.2.5 и IEEE 830"],
+             ["Проверка набора целиком","Противоречия, пропуски, соответствие части A и API"],
+             ["Проверка цитат и отчёт","Каждая цитата ищется в документе, ненайденные отбрасываются"]];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const view=$("#view");
+let timer=null,tick=null,info={};
+const api=async(u,o)=>{const r=await fetch(u,o);let d={};try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(d.error||("HTTP "+r.status));return d};
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.remove("hidden");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.add("hidden"),3200)}
+const icon={
+ up:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>',
+ shield:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+ book:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></svg>',
+ lock:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+ alert:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/></svg>',
+ check:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ dl:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>',
+ ext:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+ back:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+};
+const ext=n=>(n||"").split(".").pop().toUpperCase().slice(0,4);
+function fmtDur(a,b){if(!a)return"";const s=Math.max(0,Math.round(((b?new Date(b.replace(" ","T")):new Date())-new Date(a.replace(" ","T")))/1000));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function lineOf(loc){const m=/строка (\d+)/.exec(loc||"");return m?+m[1]-1:-1}
+
+/* ---------- router ---------- */
+function route(){clearTimeout(timer);clearInterval(tick);
+  const h=location.hash.replace(/^#\/?/,"").split("/");
+  document.querySelectorAll("[data-nav]").forEach(a=>a.classList.toggle("on",a.dataset.nav===(h[0]==="history"?"history":h[0]===""?"new":"")));
+  if(h[0]==="run"&&h[1])return showRun(h[1]);
+  if(h[0]==="report"&&h[1])return showReport(h[1],h[2]);
+  if(h[0]==="history")return showHistory();
+  return showNew()}
+window.addEventListener("hashchange",route);
+
+/* ---------- new ---------- */
+let picked=null;
+async function showNew(){
+  view.innerHTML=`<section class="hero">
+   <div>
+    <h1>Проверьте требования<br>до начала разработки</h1>
+    <p class="lead">Агент разбивает документ на отдельные требования, проверяет каждое и весь набор по ISO/IEC/IEEE 29148 и IEEE 830 и выдаёт отчёт с цитатами и местом каждого дефекта.</p>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Выбрать документ">
+      <div class="ic">${icon.up}</div>
+      <b>Перетащите документ сюда</b>
+      <span class="muted">или нажмите, чтобы выбрать · PDF, DOCX, MD, TXT до 25 МБ</span>
+      <input type="file" id="file" accept=".pdf,.docx,.md,.txt" hidden>
+      <div id="chosen"></div>
+    </div>
+    <div class="opts">
+      <button class="btn primary" id="go" disabled>Запустить проверку</button>
+      <label class="chk"><input type="checkbox" id="nocache"> Без кэша (заново спросить модель)</label>
+    </div>
+    <div class="panel sample ${info.sample?"":"hidden"}">
+      <div class="fi">PDF</div>
+      <div style="flex:1"><b>Выданный документ</b><div class="muted" style="font-size:13px">${esc(info.sample_name||"requirements.pdf")} — «Уведомление о расходах по карте», части A и B</div></div>
+      <button class="btn" id="sample">Проверить</button>
+    </div>
+   </div>
+   <div class="feat">
+    <div class="panel f"><div class="ic">${icon.shield}</div><div><b>Без выдуманных замечаний</b><p>Каждая цитата ищется в исходном документе. Не найденная — отбрасывается, а отчёт показывает, сколько цитат подтверждено.</p></div></div>
+    <div class="panel f"><div class="ic">${icon.book}</div><div><b>По стандартам</b><p>12 свойств отдельного требования и набора: однозначность, проверяемость, полнота, непротиворечивость и другие.</p></div></div>
+    <div class="panel f"><div class="ic">${icon.lock}</div><div><b>Можно без облака</b><p>С провайдером Ollama документ проверяется локальной моделью и не покидает компьютер.</p></div></div>
+   </div>
+  </section>
+  <section class="recent"><div class="sechead"><h2>Последние проверки</h2><a href="#/history">Вся история →</a></div><div class="panel" id="recent"><div class="empty">Загрузка…</div></div></section>`;
+  const drop=$("#drop"),file=$("#file");
+  drop.onclick=e=>{if(!e.target.closest(".chosen"))file.click()};
+  drop.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();file.click()}};
+  file.onchange=()=>pick(file.files[0]);
+  ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+  drop.addEventListener("drop",e=>pick(e.dataTransfer.files[0]));
+  if(picked)pick(picked);
+  $("#go").onclick=()=>start(`/api/run?name=${encodeURIComponent(picked.name)}&no_cache=${nc()}`,{method:"POST",body:picked});
+  $("#sample").onclick=()=>start(`/api/run-sample?no_cache=${nc()}`,{method:"POST"});
+  renderRows($("#recent"),(await api("/api/runs").catch(()=>[])).slice(0,4),true);
+}
+const nc=()=>$("#nocache")?.checked?"1":"0";
+function pick(f){if(!f)return;
+  if(!/\.(pdf|docx|md|txt)$/i.test(f.name)){toast("Поддерживаются PDF, DOCX, MD и TXT");return}
+  picked=f;$("#chosen").innerHTML=`<div class="chosen"><div class="fi">${esc(ext(f.name))}</div><div style="flex:1;min-width:0"><b style="font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</b><span class="muted" style="font-size:12.5px">${(f.size/1024).toFixed(0)} КБ · готов к проверке</span></div><button class="btn ghost sm" id="unpick">Убрать</button></div>`;
+  $("#unpick").onclick=e=>{e.stopPropagation();picked=null;$("#chosen").innerHTML="";$("#go").disabled=true};
+  $("#go").disabled=false}
+async function start(url,opt){try{const d=await api(url,opt);picked=null;location.hash="#/run/"+d.id}catch(e){toast(e.message)}}
+
+/* ---------- run ---------- */
+async function showRun(id){
+  view.innerHTML=`<div class="runwrap"><div class="panel runcard">
+   <div class="runhead"><div class="spinner" id="spin"></div><div style="min-width:0"><h2 id="rtitle">Проверка документа</h2><div class="muted" id="rdoc" style="font-size:13px"></div></div><span class="timer" id="tm">0:00</span></div>
+   <div class="steps" id="steps">${STEPS.map((s,i)=>`<div class="step"><div class="bullet">${i+1}</div><div><div class="t">${s[0]}</div><div class="d">${s[1]}</div><div class="d" data-cur></div><div class="sub hidden"><i style="width:0"></i></div></div></div>`).join("")}</div>
+   <div id="rerr"></div>
+   <div style="display:flex;gap:8px;margin-top:22px" id="ract"><button class="btn danger" id="stop">Остановить</button></div>
+   <details class="log"><summary>Журнал прогона</summary><pre id="log"></pre></details>
+  </div></div>`;
+  let started=null,finished=null;
+  tick=setInterval(()=>{if(started)$("#tm").textContent=fmtDur(started,finished)},1000);
+  $("#stop").onclick=async()=>{try{await api(`/api/runs/${id}/stop`,{method:"POST"});toast("Останавливаю…")}catch(e){toast(e.message)}};
+  const poll=async()=>{let d;try{d=await api("/api/runs/"+id)}catch(e){view.innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
+    started=d.started||d.created;finished=d.finished||null;$("#tm").textContent=fmtDur(started,finished);
+    $("#rdoc").textContent=d.document||"";
+    const log=d.log||"",lines=log.trim().split("\n");
+    let step=0;for(const m of log.matchAll(/^(\d)\/4/gm))step=Math.max(step,+m[1]);
+    const done=d.status==="done",bad=d.status==="error";
+    document.querySelectorAll(".step").forEach((el,i)=>{const n=i+1;el.className="step"+(done||n<step?" done":n===step?(bad?" bad":" on"):"");
+      el.querySelector(".bullet").innerHTML=(done||n<step)?icon.check:(bad&&n===step?"!":n);
+      const cur=el.querySelector("[data-cur]"),sub=el.querySelector(".sub");
+      if(n===step&&!done){const last=[...lines].reverse().find(l=>l.startsWith(n+"/4"))||"";const t=last.replace(/^\d\/4\s*/,"");
+        cur.textContent=t?"→ "+t:"";const m=/(\d+)\/(\d+)\s*$/.exec(t);if(m){sub.classList.remove("hidden");sub.firstElementChild.style.width=(100*(+m[1])/(+m[2]))+"%"}else sub.classList.add("hidden")}
+      else{cur.textContent="";sub.classList.add("hidden")}});
+    $("#log").textContent=log;
+    if(done){$("#spin").outerHTML=`<div class="bullet" style="background:var(--ok);border-color:var(--ok);color:#fff;width:24px;height:24px">${icon.check}</div>`;$("#rtitle").textContent="Готово — открываю отчёт";
+      setTimeout(()=>{if(location.hash==="#/run/"+id)location.hash="#/report/"+id},700);return}
+    if(bad){$("#spin")?.remove();$("#rtitle").textContent="Проверка не выполнена";
+      let reason="";try{const r=await api(`/api/runs/${id}/report`);reason=r.error?.reason||""}catch(e){}
+      if(!reason)reason=lines.filter(l=>/Ошибка|ошибка|Error/.test(l)).pop()||lines.pop()||"";
+      if(d.code===-15||d.code===1&&/terminated/i.test(log))reason="Прогон остановлен.";
+      $("#rerr").innerHTML=`<div class="errbox"><b>Причина</b>${esc(reason)}</div>`;
+      $("#ract").innerHTML=`<a class="btn primary" href="#/">Новая проверка</a><a class="btn" href="#/history">История</a>`;
+      document.querySelector("details.log").open=true;return}
+    timer=setTimeout(poll,1000)};
+  poll()}
+
+/* ---------- report ---------- */
+let R=null;
+async function showReport(id,tab){
+  view.innerHTML=`<div class="empty">Загружаю отчёт…</div>`;
+  let rep,meta,doc;
+  try{[rep,meta]=await Promise.all([api(`/api/runs/${id}/report`),api(`/api/runs/${id}`)])}catch(e){view.innerHTML=`<div class="empty">${esc(e.message)}<br><br><a href="#/history">К истории</a></div>`;return}
+  if(rep.error){location.hash="#/run/"+id;return}
+  doc=await api(`/api/runs/${id}/doc`).catch(e=>({error:e.message}));
+  const all=[...rep.findings.map(f=>({...f,scope:f.scope||"requirement"})),...rep.set_findings.map(f=>({...f,scope:f.scope==="rule"?"rule":"set"}))]
+    .map((f,i)=>({...f,i,line:lineOf(f.location)}))
+    .sort((a,b)=>RANK[b.severity]-RANK[a.severity]||(a.line<0)-(b.line<0)||a.line-b.line);
+  R={id,rep,meta,doc,all,f:{sev:"",crit:"",scope:"",q:"",line:-1,req:""},sel:null};
+  const s=rep.stats,p=rep.passport,v=rep.verdict,tot=Math.max(1,s.critical+s.major+s.minor);
+  const checked=s.quotes_checked??0,dropped=s.quotes_dropped??0;
+  view.innerHTML=`
+  <div class="rhead">
+    <div style="min-width:0"><a href="#/history" class="muted" style="font-size:13px;display:inline-flex;align-items:center;gap:4px">${icon.back} История</a>
+      <h1 style="margin-top:6px">${esc(p.document)}</h1>
+      <div class="meta"><span>${esc(p.date)}</span><span>модель ${esc(p.model)}</span><span>агент ${esc(p.agent_version)} · ${esc(p.commit)}</span></div></div>
+    <div class="acts">
+      <a class="btn sm" href="/runs/${id}/report.html" target="_blank">${icon.ext} HTML-отчёт</a>
+      <a class="btn sm" href="/runs/${id}/report.md?download=1">${icon.dl} MD</a>
+      <a class="btn sm" href="/runs/${id}/report.json?download=1">${icon.dl} JSON</a>
+      <button class="btn sm" onclick="window.print()">Печать</button>
+    </div>
+  </div>
+  <div class="panel verdict ${v.ready?"ok":""}"><div class="vi">${v.ready?icon.check:icon.alert}</div><div><b>${v.ready?"Документ можно передавать в разработку и тестирование":"Документ не готов к разработке и тестированию"}</b><span class="muted">${esc(v.summary)}</span></div></div>
+  <div class="kpis">
+    <div class="panel kpi click" data-go="reqs"><div class="v">${s.requirements}</div><div class="l">требований выделено</div></div>
+    <div class="panel kpi click" data-sev=""><div class="v">${s.findings}</div><div class="l">замечаний${s.related?` (+${s.related} связанных)`:""}</div></div>
+    <div class="panel kpi click" data-sev="critical"><div class="v crit">${s.critical}</div><div class="l">критичных</div></div>
+    <div class="panel kpi click" data-sev="major"><div class="v major">${s.major}</div><div class="l">существенных</div></div>
+    <div class="panel kpi click" data-sev="minor"><div class="v">${s.minor}</div><div class="l">незначительных</div></div>
+    <div class="panel kpi" title="Цитаты, найденные в исходном документе дословно"><div class="v ok">${checked-dropped}/${checked}</div><div class="l">цитат подтверждено${dropped?`, отброшено ${dropped}`:""}</div></div>
+  </div>
+  <div class="sevbar"><i style="width:${100*s.critical/tot}%;background:var(--crit)"></i><i style="width:${100*s.major/tot}%;background:var(--major)"></i><i style="width:${100*s.minor/tot}%;background:var(--minor)"></i></div>
+  <div class="tabs" id="tabs">
+    <button class="tab" data-tab="findings">Замечания<span class="n">${all.length}</span></button>
+    <button class="tab" data-tab="fixes">Что исправить<span class="n">${v.top_fixes.length}</span></button>
+    <button class="tab" data-tab="reqs">Требования<span class="n">${rep.requirements.length}</span></button>
+    <button class="tab" data-tab="passport">Паспорт прогона</button>
+  </div>
+  <div id="tabbody"></div>`;
+  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+  document.querySelectorAll("[data-sev]").forEach(k=>k.onclick=()=>{R.f={...R.f,sev:k.dataset.sev,line:-1,req:""};setTab("findings")});
+  document.querySelector("[data-go=reqs]").onclick=()=>setTab("reqs");
+  setTab(tab||"findings",true)}
+function setTab(t,noHash){R.tab=t;document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+  if(!noHash)history.replaceState(null,"",`#/report/${R.id}/${t}`);
+  ({findings:tabFindings,fixes:tabFixes,reqs:tabReqs,passport:tabPassport})[t]()}
+
+function filtered(){const f=R.f,q=f.q.trim().toLowerCase();
+  return R.all.filter(x=>(!f.sev||x.severity===f.sev)&&(!f.crit||x.criterion===f.crit)&&(!f.scope||(f.scope==="set"?x.scope!=="requirement":x.scope==="requirement"))
+    &&(f.line<0||spanOf(x).includes(f.line))&&(!f.req||x.req_id.split(",").map(s=>s.trim()).includes(f.req))
+    &&(!q||(x.quote+" "+x.explanation+" "+x.fix+" "+x.req_id+" "+(CRIT[x.criterion]||"")).toLowerCase().includes(q)))}
+function spanOf(x){if(x.line<0||!R.doc.lines)return[];const L=R.doc.lines,need=(x.quote||"").replace(/\s+/g,"").length*0.85;let acc=0,out=[];
+  for(let i=x.line;i<L.length&&out.length<8;i++){out.push(i);acc+=L[i].replace(/\s+/g,"").length;if(acc>=need)break}return out}
+
+function tabFindings(){
+  const counts=s=>R.all.filter(x=>x.severity===s).length;
+  const crits=[...new Set(R.all.map(x=>x.criterion))].sort((a,b)=>(CRIT[a]||a).localeCompare(CRIT[b]||b,"ru"));
+  $("#tabbody").innerHTML=`<div class="split"><div>
+    <div class="filters">
+      <button class="chip" data-s="">Все<span class="c">${R.all.length}</span></button>
+      ${["critical","major","minor"].map(s=>`<button class="chip" data-s="${s}">${SEVN[s]}<span class="c">${counts(s)}</span></button>`).join("")}
+    </div>
+    <div class="filters">
+      <select class="sel" id="fcrit"><option value="">Все критерии</option>${crits.map(c=>`<option value="${c}">${esc(CRIT[c]||c)}</option>`).join("")}</select>
+      <select class="sel" id="fscope"><option value="">Требования и набор</option><option value="req">Отдельные требования</option><option value="set">Набор целиком</option></select>
+      <input class="search" id="fq" placeholder="Поиск по тексту, R-номеру…" value="${esc(R.f.q)}">
+    </div>
+    <div class="filters" id="activef"></div>
+    <div class="list" id="list"></div></div>
+    <div class="panel docpane" id="docpane"><div class="dh"><b>Документ</b><span class="muted">${esc(R.rep.passport.document)}</span><span class="faint" style="margin-left:auto">подсвечены места замечаний</span></div><div class="doc" id="doc"></div></div></div>`;
+  $("#fcrit").value=R.f.crit;$("#fscope").value=R.f.scope;
+  document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{R.f.sev=b.dataset.s;drawList()});
+  $("#fcrit").onchange=e=>{R.f.crit=e.target.value;drawList()};
+  $("#fscope").onchange=e=>{R.f.scope=e.target.value;drawList()};
+  $("#fq").oninput=e=>{R.f.q=e.target.value;drawList()};
+  drawDoc();drawList()}
+function drawList(){
+  document.querySelectorAll("[data-s]").forEach(b=>b.classList.toggle("on",b.dataset.s===R.f.sev));
+  const af=[];if(R.f.line>=0)af.push(["line",`Строка ${R.f.line+1}`]);if(R.f.req)af.push(["req",`Требование ${R.f.req}`]);
+  $("#activef").innerHTML=af.map(([k,t])=>`<span class="activef">${esc(t)}<button data-clr="${k}" aria-label="Сбросить">×</button></span>`).join("");
+  document.querySelectorAll("[data-clr]").forEach(b=>b.onclick=()=>{if(b.dataset.clr==="line")R.f.line=-1;else R.f.req="";drawList()});
+  const xs=filtered();
+  $("#list").innerHTML=xs.length?xs.map(x=>`<article class="panel fcard s-${x.severity} ${R.sel===x.i?"sel":""}" data-i="${x.i}">
+    <div class="fhead"><span class="badge b-${x.severity}">${SEV[x.severity]}</span><span class="crit">${esc(CRIT[x.criterion]||x.criterion)}</span>
+      ${x.scope!=="requirement"?`<span class="badge b-set">${x.scope==="rule"?"правило":"набор"}</span>`:""}
+      ${x.req_id&&x.req_id!=="SET"?x.req_id.split(",").map(r=>`<span class="rid">${esc(r.trim())}</span>`).join(""):""}
+      <span class="loc">${esc(x.location||"")}</span></div>
+    <div class="quote">${esc(x.quote)}</div>
+    <div class="kv"><span class="k">Проблема</span><span>${esc(x.explanation)}</span>${x.fix?`<span class="k">Исправить</span><span class="fix">${esc(x.fix)}</span>`:""}</div>
+    ${x.related?.length?`<div class="rel">+ ещё ${x.related.length} ${x.related.length===1?"связанное замечание":"связанных замечания"} к этому месту</div>`:""}
+  </article>`).join(""):`<div class="panel empty">Под фильтры ничего не попало</div>`;
+  document.querySelectorAll(".fcard").forEach(c=>c.onclick=()=>selectF(+c.dataset.i,true))}
+function selectF(i,scroll){R.sel=i;document.querySelectorAll(".fcard").forEach(c=>c.classList.toggle("sel",+c.dataset.i===i));
+  const x=R.all.find(z=>z.i===i);document.querySelectorAll(".ln.focus").forEach(l=>l.classList.remove("focus"));
+  const sp=spanOf(x);sp.forEach(n=>{const el=document.getElementById("L"+n);if(el){el.classList.add("focus");}});
+  if(scroll&&sp.length){const el=document.getElementById("L"+sp[0]),box=$("#doc");if(el&&box){box.scrollTo({top:el.offsetTop-box.clientHeight/3,behavior:"smooth"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")}}}
+function drawDoc(){const d=R.doc,box=$("#doc");if(!box)return;
+  if(!d||d.error||!d.lines){box.innerHTML=`<div class="empty">Текст документа недоступен${d&&d.error?": "+esc(d.error):""}</div>`;return}
+  const mark={};R.all.forEach(x=>spanOf(x).forEach(n=>{const m=mark[n]||(mark[n]={sev:"minor",n:0,first:x.i});m.n+=n===x.line?1:0;if(RANK[x.severity]>RANK[m.sev])m.sev=x.severity}));
+  let html="",pg=null;
+  d.lines.forEach((t,n)=>{const p=d.pages&&d.pages[n];if(p&&p!==pg){pg=p;html+=`<div class="pg">Страница ${p}</div>`}
+    const m=mark[n],hd=/^#{1,6}\s/.test(t),sep=/^\|?\s*:?-{3,}/.test(t);
+    const shown=esc(t.replace(/^#{1,6}\s+/,"").replace(/\*\*/g,"").replace(/`/g,""));
+    html+=`<div class="ln${m?" h-"+m.sev:""}" id="L${n}" data-n="${n}"><span class="no">${n+1}</span><span class="tx${hd?" hd":""}${sep?" sep":""}">${m&&m.n?`<span class="cnt">${m.n}</span>`:""}${shown||"&nbsp;"}</span></div>`});
+  box.innerHTML=html;
+  box.querySelectorAll(".ln[class*=h-]").forEach(el=>el.onclick=()=>{const n=+el.dataset.n;const hit=R.all.filter(x=>spanOf(x).includes(n));
+    R.f.line=hit.some(x=>x.line===n)?n:(hit[0]?.line??n);R.f.sev="";R.f.req="";drawList();if(hit[0])selectF(hit[0].i,false);$("#list").scrollIntoView({behavior:"smooth",block:"start"})})}
+
+function tabFixes(){const v=R.rep.verdict;
+  $("#tabbody").innerHTML=`<p class="muted" style="margin-top:0">${esc(v.summary)}</p><div class="fixes">${v.top_fixes.map(t=>{
+    const m=/^\[([^\]]+)\]\s*([\s\S]*?)(?:\s*→\s*([\s\S]*))?$/.exec(t)||[];
+    return `<div class="panel fx">${m[1]?`<div class="m">${esc(m[1])}</div>`:""}<div class="p">${esc(m[2]||t)}</div>${m[3]?`<div class="s">→ ${esc(m[3])}</div>`:""}</div>`}).join("")}</div>`}
+
+function tabReqs(){const by={};R.all.forEach(x=>x.req_id.split(",").forEach(r=>{r=r.trim();const b=by[r]||(by[r]={n:0,sev:null});b.n++;if(!b.sev||RANK[x.severity]>RANK[b.sev])b.sev=x.severity}));
+  $("#tabbody").innerHTML=`<div class="panel tablewrap"><table class="t"><thead><tr><th>ID</th><th>В документе</th><th>Раздел</th><th>Формулировка</th><th>Место</th><th>Замечаний</th></tr></thead><tbody>
+  ${R.rep.requirements.map(r=>{const b=by[r.id];return `<tr class="click" data-r="${esc(r.id)}"><td><span class="rid">${esc(r.id)}</span></td><td>${esc(r.doc_id||"—")}</td><td class="muted" style="font-size:12.5px">${esc(r.section)}</td><td>${esc(r.quote)}</td><td class="faint" style="white-space:nowrap;font-size:12.5px">${esc(r.location||"не найдено")}</td><td>${b?`<span class="badge b-${b.sev}">${b.n}</span>`:'<span class="faint">—</span>'}</td></tr>`}).join("")}
+  </tbody></table></div>`;
+  document.querySelectorAll("tr[data-r]").forEach(tr=>tr.onclick=()=>{R.f={sev:"",crit:"",scope:"",q:"",line:-1,req:tr.dataset.r};setTab("findings")})}
+
+function tabPassport(){const p=R.rep.passport,s=R.rep.stats,m=R.meta;
+  const rows=[["Документ",p.document],["Дата прогона",p.date],["Модель",p.model],["Версия агента",`${p.agent_version} (коммит ${p.commit})`],
+   ["Критерии","ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE Std 830-1998 п. 4.3"],["Длительность",fmtDur(m.started,m.finished)||"—"],
+   ["Проверка цитат",`проверено ${s.quotes_checked??"—"}, отброшено как не найденные в документе: ${s.quotes_dropped??0}`]];
+  $("#tabbody").innerHTML=`<div class="panel passport">${rows.map(([k,v])=>`<span class="k">${k}</span><span>${esc(v)}</span>`).join("")}</div>
+  ${(s.warnings||[]).length?`<div class="panel" style="padding:16px 20px;margin-top:12px"><b>Предупреждения о чтении документа</b><ul>${s.warnings.map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>`:""}
+  ${(s.dropped_examples||[]).length?`<div class="panel" style="padding:16px 20px;margin-top:12px"><b>Отброшенные цитаты</b> <span class="muted">— модель привела текст, которого нет в документе; эти замечания в отчёт не попали</span><ul>${s.dropped_examples.map(w=>`<li class="muted">${esc(w)}</li>`).join("")}</ul></div>`:""}`}
+
+/* ---------- history ---------- */
+async function showHistory(){
+  view.innerHTML=`<div class="sechead"><h1>История проверок</h1><a class="btn primary" href="#/">Новая проверка</a></div><div class="panel" id="hist"><div class="empty">Загрузка…</div></div>`;
+  renderRows($("#hist"),await api("/api/runs").catch(()=>[]),false);
+  const busy=[...document.querySelectorAll(".st.run")].length;if(busy)timer=setTimeout(showHistory,2500)}
+function stBadge(r){const s=r.summary||{};
+  if(r.status==="running"||r.status==="queued")return`<span class="st run"><span class="spinner" style="width:11px;height:11px;border-width:2px"></span>идёт</span>`;
+  if(s.error||r.status==="error")return`<span class="st bad">ошибка</span>`;
+  if(s.ready)return`<span class="st ok">готов к разработке</span>`;
+  return`<span class="st ${s.critical?"bad":"warn"}">${s.critical?`критичных: ${s.critical}`:"есть замечания"}</span>`}
+function renderRows(box,runs,compact){
+  if(!runs.length){box.innerHTML=`<div class="empty">Проверок пока нет — загрузите документ, и отчёт появится здесь.</div>`;return}
+  box.innerHTML=`<div class="hrow head"><span>Документ</span><span>Результат</span><span>Требований / замечаний</span><span>Модель</span><span></span></div>`+
+   runs.map(r=>{const s=r.summary||{};return `<div class="hrow" data-id="${esc(r.id)}" data-st="${esc(r.status)}">
+    <div style="min-width:0"><div class="name">${esc(r.document)}</div><div class="sub2">${esc(r.created||"")}${r.started&&r.finished?" · "+fmtDur(r.started,r.finished):""}</div></div>
+    <div>${stBadge(r)}</div>
+    <div class="sub2">${s.requirements!=null?`${s.requirements} / ${s.findings}`:"—"}</div>
+    <div class="sub2" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.model||"—")}</div>
+    <div>${compact?"":`<button class="btn ghost sm danger" data-del="${esc(r.id)}">Удалить</button>`}</div></div>`}).join("");
+  box.querySelectorAll(".hrow[data-id]").forEach(el=>el.onclick=e=>{if(e.target.closest("[data-del]"))return;
+    const st=el.dataset.st;location.hash=(st==="done"?"#/report/":"#/run/")+el.dataset.id});
+  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=async e=>{e.stopPropagation();
+    if(!b.dataset.sure){b.dataset.sure=1;b.textContent="Точно удалить?";setTimeout(()=>{if(b.isConnected){delete b.dataset.sure;b.textContent="Удалить"}},3000);return}
+    try{await api(`/api/runs/${b.dataset.del}/delete`,{method:"POST"});toast("Прогон удалён");showHistory()}catch(err){toast(err.message)}})}
+
+/* ---------- init ---------- */
+api("/api/info").then(i=>{info=i;$("#mname").textContent=i.model;$("#mdot").classList.toggle("off",/нет \.env/.test(i.model));if(!location.hash||location.hash==="#/")route()}).catch(()=>{$("#mname").textContent="сервер недоступен";$("#mdot").classList.add("off")});
+if(location.hash&&location.hash!=="#/")route();
+</script>
+</body>
+</html>
