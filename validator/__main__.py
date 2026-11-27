@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from . import __version__
 from .ingest import DocumentError, QuoteIndex, load
 from .llm import LLM, LLMError
-from .pipeline import ROOT, PROMPTS, check_requirements, check_set, dedupe, extract, make_verdict, rule_checks, verify
+from .pipeline import ROOT, PROMPTS, check_requirements, check_set, consolidate, dedupe, extract, make_verdict, rule_checks, verify
 from .report import render, render_error
 from .schema import Passport, Report
 
@@ -103,11 +103,15 @@ def main(argv: list[str] | None = None) -> int:
     per_req, dropped_r = verify(dedupe(per_req), idx)
     per_set, dropped_s = verify(dedupe(per_set + rules), idx)
     dropped = dropped_r + dropped_s
+    raw_total = len(per_req) + len(per_set)
+    per_req, per_set = consolidate(per_req, per_set)
 
     allf = per_req + per_set
     stats = {
         "requirements": len(reqs),
         "findings": len(allf),
+        "related": sum(len(f.related) for f in allf),
+        "raw_findings": raw_total,
         "critical": sum(f.severity == "critical" for f in allf),
         "major": sum(f.severity == "major" for f in allf),
         "minor": sum(f.severity == "minor" for f in allf),

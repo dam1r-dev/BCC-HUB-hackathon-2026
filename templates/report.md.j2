@@ -41,6 +41,12 @@
   - Цитата: «{{ f.quote }}»
   - Проблема: {{ f.explanation }}
   - Исправить: {{ f.fix }}
+{% if f.related %}
+  - Связанные замечания к этому же требованию ({{ f.related | length }}):
+{% for x in f.related %}
+    - *{{ x.criterion | crit }}, {{ x.severity | sev }}*: {{ x.explanation }} → {{ x.fix }}
+{% endfor %}
+{% endif %}
 {% endfor %}
 
 {% endfor %}
@@ -50,7 +56,7 @@
 | # | Критерий | Критичность | Затронуто | Цитата и место | Проблема | Исправить |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 {% for f in set_findings %}
-| S{{ loop.index }} | {{ f.criterion | crit }} | {{ f.severity | sev }} | {{ f.req_id | cell }} | «{{ f.quote | cell }}» ({{ f.location }}) | {{ f.explanation | cell }} | {{ f.fix | cell }} |
+| S{{ loop.index }} | {{ f.criterion | crit }} | {{ f.severity | sev }} | {{ f.req_id | cell }} | «{{ f.quote | cell }}» ({{ f.location }}) | {{ f.explanation | cell }}{% if f.related %} <br>Связанные ({{ f.related | length }}): {% for x in f.related %}{{ x.explanation | short(140) | cell }}{% if not loop.last %}; {% endif %}{% endfor %}{% endif %} | {{ f.fix | cell }} |
 {% endfor %}
 {% else %}
 Нарушений на уровне набора не найдено.
@@ -61,7 +67,8 @@
 | Показатель | Значение |
 | :--- | :--- |
 | Требований выделено | {{ stats.requirements }} |
-| Нарушений всего | {{ stats.findings }} |
+| Нарушений (главных) | {{ stats.findings }} |
+| Связанных замечаний (вложены в главные) | {{ stats.related }} |
 | Критичных | {{ stats.critical }} |
 | Существенных | {{ stats.major }} |
 | Незначительных | {{ stats.minor }} |

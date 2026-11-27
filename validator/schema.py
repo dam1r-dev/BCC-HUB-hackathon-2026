@@ -47,6 +47,7 @@ class Finding:
     location: str = ""
     quote_verified: bool = False
     scope: str = "requirement"  # requirement | set | rule
+    related: list = field(default_factory=list)  # вложенные замечания к тому же месту: {criterion, severity, quote, explanation, fix}
 
 
 @dataclass

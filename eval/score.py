@@ -50,7 +50,8 @@ def main() -> int:
     report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     golden_path = Path(sys.argv[2] if len(sys.argv) > 2 else Path(__file__).parent / "golden_defects.json")
     golden = json.loads(golden_path.read_text(encoding="utf-8"))
-    found = report["findings"] + report["set_findings"]
+    main = report["findings"] + report["set_findings"]
+    found = main + [x for f in main for x in f.get("related", [])]  # вложенные замечания тоже есть в отчёте
     hit, miss = [], []
     for g in golden:
         (hit if any(gmatch(g, f["quote"]) for f in found) else miss).append(g)
@@ -62,7 +63,7 @@ def main() -> int:
     print(f"Строго (место + тип дефекта): {len(strict)} из {len(golden)} ({len(strict) / max(1, len(golden)):.0%})")
     print("Строго, критичные: " + ", ".join(f"{g['id']}{'+' if g in strict else '-'}" for g in crit))
     print(f"Из них критичных: {len(crit_hit)} из {len(crit)}")
-    print(f"Всего замечаний у агента: {len(found)}")
+    print(f"Замечаний у агента: главных {len(main)}, вместе с вложенными {len(found)}")
     if miss:
         print("\nПропущены:")
         for g in miss:
