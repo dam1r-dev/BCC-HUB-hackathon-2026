@@ -92,3 +92,25 @@ def test_verdict_blocks_on_critical():
     v = P.make_verdict([], [F(sev="critical")], [])
     assert not v.ready and v.top_fixes
     assert P.make_verdict([], [F(sev="minor")], []).ready
+
+
+def test_set_duplicates_by_requirements_are_merged():
+    a = F("consistent", "critical", "GET для сохранения", "R28,R29", "set")
+    b = F("consistent", "critical", "совсем другие слова", "R28,R29,R33", "set")
+    _, per_set = P.consolidate([], [a, b])
+    assert per_set == [a] and len(a.related) == 1
+
+
+def test_requirement_finding_nested_into_set_finding_on_same_place():
+    s_ = F("consistent", "critical", "двести ок или ошибка в ответе", "R55,R48", "set")
+    r = F("conforming", "major", "двести ок или ошибка в ответе", "R55")
+    per_req, per_set = P.consolidate([r], [s_])
+    assert not per_req and s_.related
+
+
+def test_budget_keeps_critical_and_moves_rest_to_secondary():
+    reqs = [F(sev="major", req=f"R{i:02d}", quote=f"q{i}") for i in range(30)]
+    crit = [F("consistent", "critical", f"c{i}", f"R{i:02d}", "set") for i in range(20)]
+    per_req, per_set, rest = P.budget(reqs, crit, n_reqs=10)  # лимит 15, но все 20 критичных остаются
+    assert len(per_set) == 20 and not per_req and len(rest) == 30
+    assert {"req_id", "quote", "location"} <= set(rest[0])

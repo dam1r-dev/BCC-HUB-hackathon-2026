@@ -67,6 +67,16 @@
 Нарушений на уровне набора не найдено.
 {% endif %}
 
+{% if stats.secondary %}
+### Прочие замечания (низкий приоритет, кратко)
+
+| Затронуто | Критерий | Критичность | Цитата и место | Суть |
+| :--- | :--- | :--- | :--- | :--- |
+{% for x in stats.secondary %}
+| {{ x.req_id | cell }} | {{ x.criterion | crit }} | {{ x.severity | sev }} | «{{ x.quote | short(90) | cell }}» ({{ x.location }}) | {{ x.explanation | short(160) | cell }} |
+{% endfor %}
+{% endif %}
+
 ## 5. Сводка
 
 | Показатель | Значение |
@@ -74,10 +84,13 @@
 | Требований выделено | {{ stats.requirements }} |
 | Нарушений (главных) | {{ stats.findings }} |
 | Связанных замечаний (вложены в главные) | {{ stats.related }} |
-| Критичных | {{ stats.critical }} |
-| Существенных | {{ stats.major }} |
-| Незначительных | {{ stats.minor }} |
-
+{% if stats.secondary_count %}| Прочих замечаний (низкий приоритет, кратким списком в разделе 4) | {{ stats.secondary_count }} |
+{% endif %}
+| Критичных (среди главных) | {{ stats.critical }} |
+| Существенных (среди главных) | {{ stats.major }} |
+| Незначительных (среди главных) | {{ stats.minor }} |
+{% if stats.secondary %}{% set sec = stats.secondary %}| Все замечания по критичности, включая прочие: критичных / существенных / незначительных | {{ stats.critical + (sec | selectattr("severity", "equalto", "critical") | list | length) }} / {{ stats.major + (sec | selectattr("severity", "equalto", "major") | list | length) }} / {{ stats.minor + (sec | selectattr("severity", "equalto", "minor") | list | length) }} |
+{% endif %}
 Шкала: **критичный** — исполнители гарантированно сделают по-разному, требование не проверить или есть риск для денег и данных; **существенный** — до разработки нужен ответ аналитика; **незначительный** — формулировка, термин, дубль, на код и тесты не влияет.
 
 ### Критичные дефекты
