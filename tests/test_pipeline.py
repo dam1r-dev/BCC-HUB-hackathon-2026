@@ -51,6 +51,7 @@ def test_review_refuses_mass_drop():
     ans = {"items": [{"n": i, "verdict": "drop"} for i in range(1, 8)]}
     kept, rejected = P.review(Reviewer(ans), load(SAMPLE), fs)
     assert len(kept) == 10 and not rejected
+    assert [f.severity for f in kept].count("minor") == 7  # сомнительные понижены, а не выброшены
 
 
 def test_review_survives_model_failure():

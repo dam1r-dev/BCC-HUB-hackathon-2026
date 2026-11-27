@@ -614,13 +614,13 @@ function renderSide(){const side=document.getElementById("side");if(!side)return
   side.innerHTML=html;
   side.querySelectorAll("[data-stab]").forEach(b=>b.onclick=()=>{setTab(b.dataset.stab);renderSide()});
   side.querySelectorAll("[data-ssev]").forEach(b=>b.onclick=()=>{R.f={...R.f,sev:b.dataset.ssev,line:-1,req:""};setTab("findings");renderSide();scrollTo({top:0,behavior:"smooth"})});}
-const CRIT={necessary:"Необходимость",appropriate:"Уместность уровня",unambiguous:"Однозначность",complete:"Полнота",singular:"Единичность",feasible:"Выполнимость",verifiable:"Проверяемость",correct:"Корректность",conforming:"Соответствие шаблону",consistent:"Непротиворечивость",traceable:"Трассируемость",comprehensible:"Понятность"};
+const CRIT={necessary:"Необходимость",appropriate:"Уместность уровня",unambiguous:"Однозначность",complete:"Полнота",singular:"Единичность",feasible:"Выполнимость",verifiable:"Проверяемость",correct:"Корректность",conforming:"Соответствие шаблону",consistent:"Непротиворечивость",traceable:"Трассируемость",comprehensible:"Понятность",validatable:"Валидируемость",ranked:"Ранжированность",modifiable:"Модифицируемость"};
 const SEV={critical:"критичный",major:"существенный",minor:"незначительный"};
 const SEVN={critical:"Критичные",major:"Существенные",minor:"Незначительные"};
 const SEVC={critical:"var(--crit)",major:"var(--major)",minor:"var(--minor)"};
 const RANK={critical:3,major:2,minor:1};
 const STEPS=[["Осмотр места происшествия","Нарезка: документ разбирается на отдельные требования"],
-             ["Допрос каждого требования","12 критериев ISO/IEC/IEEE 29148 п. 5.2.5 и IEEE 830"],
+             ["Допрос каждого требования","9 свойств требования — ISO/IEC/IEEE 29148 п. 5.2.5 и IEEE 830"],
              ["Сверка показаний","Весь набор: противоречия, пропуски, часть A против API"],
              ["Проверка улик","Каждая цитата ищется в документе, ненайденные отбрасываются"]];
 const $=s=>document.querySelector(s);
@@ -709,7 +709,7 @@ async function showNew(){
     <div class="chip-eyebrow"><span class="pulse"></span>ISO/IEC/IEEE 29148 · IEEE 830 · ${esc(info.model||"модель из .env")}</div>
     <h1 class="mega"><span class="l"><span>Проверка требований</span></span><span class="l"><span>до первой <span class="hl">строки кода</span></span></span></h1>
     <div class="hero-sub">
-      <p class="lead">TEKSERLOCK разбивает ТЗ на отдельные требования, проверяет каждое и весь набор по 12 критериям качества и подкрепляет каждое замечание цитатой из документа.</p>
+      <p class="lead">TEKSERLOCK разбивает ТЗ на отдельные требования, проверяет каждое и весь набор по 17 свойствам качества и подкрепляет каждое замечание цитатой из документа.</p>
       <div class="hero-cta">${info.sample?`<button class="btn primary lg" id="sample2">Проверить выданный документ ${icon.arr}</button>`:""}<a class="btn lg" href="#/" data-jump="upload">Загрузить свой</a></div>
     </div>
     <div class="case">

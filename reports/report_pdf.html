@@ -1,0 +1,1551 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отчёт о проверке требований — requirements.pdf</title>
+<style>
+:root{
+  --bg:#f6f7f9;--surface:#fff;--surface-2:#f1f3f6;--text:#16181d;--muted:#5b6270;--line:#e3e6eb;
+  --crit:#c4271d;--crit-bg:#fdecea;--major:#b86a00;--major-bg:#fff4e0;--minor:#4a5568;--minor-bg:#eef1f5;
+  --ok:#1f7a4d;--ok-bg:#e7f6ee;--accent:#2457d6;--accent-bg:#e9efff;--shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1115;--surface:#171a21;--surface-2:#1e222b;--text:#e8eaef;--muted:#9aa3b2;--line:#2a2f3a;
+  --crit:#ff6b5f;--crit-bg:#3a1714;--major:#ffb547;--major-bg:#36260b;--minor:#a7b0bf;--minor-bg:#232833;
+  --ok:#4fd08f;--ok-bg:#12301f;--accent:#7aa2ff;--accent-bg:#1b2442;--shadow:none;}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 64px}
+header.top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:19px;margin:36px 0 12px;letter-spacing:-.01em}
+h3{font-size:15px;margin:0}
+.sub{color:var(--muted);font-size:14px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2px 18px;font-size:13px;color:var(--muted)}
+.meta b{color:var(--text);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.verdict{padding:18px 20px;border-left:6px solid var(--crit);display:flex;gap:14px;align-items:flex-start}
+.verdict.ready{border-left-color:var(--ok)}
+.verdict .icon{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;background:var(--crit)}
+.verdict.ready .icon{background:var(--ok)}
+.verdict .title{font-size:18px;font-weight:700;margin-bottom:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:14px}
+.kpi{padding:14px 16px}
+.kpi .n{font-size:28px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:13px;color:var(--muted)}
+.kpi.crit .n{color:var(--crit)}.kpi.major .n{color:var(--major)}.kpi.ok .n{color:var(--ok)}
+.bar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-top:14px}
+.bar span{display:block}
+.notice{padding:12px 16px;margin-top:12px;background:var(--major-bg);border-color:transparent;font-size:14px}
+.notice ul{margin:6px 0 0;padding-left:20px}
+ol.fixes{margin:0;padding:6px 20px 6px 40px}
+ol.fixes li{padding:8px 0;border-bottom:1px solid var(--line)}ol.fixes li:last-child{border:0}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.sev-critical{background:var(--crit-bg);color:var(--crit)}.sev-major{background:var(--major-bg);color:var(--major)}.sev-minor{background:var(--minor-bg);color:var(--minor)}
+.chip{background:var(--surface-2);color:var(--muted)}
+.loc{font-size:12px;color:var(--muted);white-space:nowrap}
+.finding{padding:14px 16px;border-top:1px solid var(--line)}
+.finding:first-child{border-top:0}
+.finding .head{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.finding .crit-name{font-weight:600}
+blockquote{margin:0 0 8px;padding:8px 12px;border-left:3px solid var(--line);background:var(--surface-2);border-radius:0 8px 8px 0;font-size:14px}
+.row{display:grid;grid-template-columns:96px 1fr;gap:8px;font-size:14px;margin-top:4px}
+.row .k{color:var(--muted)}
+.fix .v{color:var(--ok)}
+.related{margin-top:10px;padding:8px 12px;border:1px dashed var(--line);border-radius:8px;font-size:13px}
+.related summary{cursor:pointer;color:var(--muted)}
+.related ul{margin:8px 0 0;padding-left:18px}.related li{margin:6px 0}
+.toolbar{position:sticky;top:0;z-index:5;display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 12px;margin:0 0 14px;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(6px)}
+.toolbar input[type=search]{flex:1 1 220px;min-width:180px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit}
+.toolbar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--muted);padding:7px 11px;font:inherit;font-size:13px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--accent-bg);color:var(--accent);font-weight:600}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:7px 11px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer}
+.count{font-size:13px;color:var(--muted);margin-left:auto}
+details.req{margin-bottom:10px}
+details.req>summary{list-style:none;cursor:pointer;padding:12px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+details.req>summary::-webkit-details-marker{display:none}
+details.req>summary .rid{font-weight:700;font-variant-numeric:tabular-nums}
+details.req>summary .q{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.req[open]>summary{border-bottom:1px solid var(--line)}
+details.req[open]>summary .q{white-space:normal}
+.req-body .fullq{padding:12px 16px 0;font-size:14px}
+.clean{padding:12px 16px;color:var(--ok);font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;background:var(--surface-2);position:sticky;top:0}
+.tbl{max-height:520px;overflow:auto;border-radius:12px}
+.set .finding .head .aff{font-size:12px;color:var(--muted)}
+.hidden{display:none!important}
+.empty{padding:16px;color:var(--muted);text-align:center}
+footer{margin-top:40px;font-size:12px;color:var(--muted)}
+.error-box{padding:22px;border-left:6px solid var(--crit)}
+@media (max-width:640px){.row{grid-template-columns:1fr}details.req>summary{grid-template-columns:auto 1fr}details.req>summary .badges{grid-column:1/-1}}
+@media print{
+  body{background:#fff}.toolbar,.no-print{display:none!important}.card{box-shadow:none}
+  details.req{break-inside:avoid}details.req>summary .q{white-space:normal}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>Отчёт о проверке требований</h1>
+    <div class="sub">requirements.pdf · ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE Std 830-1998 п. 4.3</div>
+  </div>
+  <div class="no-print"><button class="btn" onclick="window.print()">Печать / PDF</button></div>
+</header>
+
+<section class="card verdict">
+  <div class="icon">!</div>
+  <div>
+    <div class="title">Документ не готов к разработке и тестированию</div>
+    <div>Начинать разработку и тестирование по документу нельзя. Критичных дефектов: 6, существенных: 45. Сначала устранить критичные дефекты из списка ниже.</div>
+  </div>
+</section>
+
+<div class="kpis">
+  <div class="card kpi"><div class="n">64</div><div class="l">требований выделено</div></div>
+  <div class="card kpi"><div class="n">57</div><div class="l">нарушений (+4 связанных)</div></div>
+  <div class="card kpi crit"><div class="n">6</div><div class="l">критичных</div></div>
+  <div class="card kpi major"><div class="n">45</div><div class="l">существенных</div></div>
+  <div class="card kpi"><div class="n">6</div><div class="l">незначительных</div></div>
+  <div class="card kpi ok"><div class="n">57/58</div><div class="l">цитат подтверждено в документе</div></div>
+</div>
+<div class="bar" title="Распределение по критичности">
+  <span style="width:10.526315789473685%;background:var(--crit)"></span>
+  <span style="width:78.94736842105263%;background:var(--major)"></span>
+  <span style="width:10.526315789473685%;background:var(--minor)"></span>
+</div>
+
+
+<h2>Что исправить в первую очередь</h2>
+<div class="card"><ol class="fixes"><li>[R14,R15,R17,R25 (Ф-3), стр. 1, строка 41] R14 требует отправлять push при каждом переходе через порог, а R15 ограничивает максимум одним push за месяц. В R17 указано, что при изменении порога и накопленной сумме ниже нового порога, следующее достижение вызывает push независимо от истории. В критерии R25 не описан случай, если после корректировки порога сумма снова пересекает порог в том же месяце — неясно, должен ли быть второй push. Это противоречие: правила не согласованы между собой и с критерием приёмки. → Уточнить, допускается ли повторный push при изменении порога в течение месяца, если сумма снова пересекает порог, и согласовать формулировки R14, R15, R17 и критерии приёмки.</li><li>[R28,R29, стр. 3, строка 179] В описании метода указано &#34;Сохранение порога&#34;, но REST type GET подразумевает только чтение, а не изменение данных. GET не должен использоваться для операций сохранения. → Использовать метод POST или PUT для сохранения порога, либо скорректировать описание, если операция только читает данные.</li><li>[R46,R47, стр. 4, строка 251] Указан Content-Type: application/json, но далее сказано &#34;Тело не используется.&#34;. Для GET-запросов тело обычно не передаётся, а Content-Type не требуется. Если метод всё же должен принимать тело, это противоречит REST и приведёт к разной реализации. → Убрать Content-Type или явно указать, что тело не используется и параметры передаются только в query-строке.</li><li>[R55,R48 (Статус 200), стр. 4, строка 284] В ответе с кодом 200 может возвращаться result: &#34;ERROR&#34; и message с ошибкой, хотя в R48 сказано: &#34;Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.&#34;. Это приведёт к тому, что ошибка будет передана с успешным HTTP-кодом, что нарушает REST и приведёт к разной обработке ошибок. → Возвращать ошибки только с соответствующими неуспешными HTTP-кодами (например, 400), а не с 200. В ответе с 200 не должно быть result: &#34;ERROR&#34;.</li><li>[R28,R29,R33,R46,R47, стр. 3, строка 181] Используется GET для сохранения порога (R28, R33), при этом указан Content-Type: application/json (R46), но тело не используется (R47). GET не должен изменять данные и не должен иметь тело. Это нарушает REST и приведёт к разной реализации. → Изменить метод на POST или PUT для операций сохранения, либо скорректировать описание, если операция только читает данные. Убрать Content-Type и тело для GET.</li><li>[R48,R53,R54,R55,R59, стр. 4, строка 254] В R55 пример ответа с 200 содержит result: &#34;ERROR&#34;, а в R59 ошибка возвращается с 400. Это противоречие приведёт к разной обработке ошибок клиентами. → Установить единое правило: ошибки возвращаются только с неуспешными HTTP-кодами (400 и выше), а успешные ответы — только с result: &#34;OK&#34;.</li><li>[R08,R22,R39 (Ф-1), стр. 1, строка 36] В R08 и R39 порог указывается в тенге, а в R22 поле хранения порога — в тенге, но сумма покупки хранится в тиынах. Не указано, в каких единицах сравниваются расходы и порог при расчёте достижения порога. Это может привести к ошибке округления или неверному сравнению. → Явно указать, в каких единицах (тенге или тиыны) сравниваются расходы и порог при расчёте достижения порога, и привести к единому формату хранения и передачи.</li></ol></div>
+
+<h2>Критичные дефекты <span class="badge sev-critical">6</span></h2>
+<div class="card">
+  <div class="finding">
+    <div class="head"><span class="badge sev-critical">критичный</span><span class="crit-name">Непротиворечивость</span><span class="badge chip">R14,R15,R17,R25</span><span class="loc">стр. 1, строка 41</span></div>
+    <blockquote>«Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>R14 требует отправлять push при каждом переходе через порог, а R15 ограничивает максимум одним push за месяц. В R17 указано, что при изменении порога и накопленной сумме ниже нового порога, следующее достижение вызывает push независимо от истории. В критерии R25 не описан случай, если после корректировки порога сумма снова пересекает порог в том же месяце — неясно, должен ли быть второй push. Это противоречие: правила не согласованы между собой и с критерием приёмки.</span></div>
+    <div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, допускается ли повторный push при изменении порога в течение месяца, если сумма снова пересекает порог, и согласовать формулировки R14, R15, R17 и критерии приёмки.</span></div>
+  </div>
+  <div class="finding">
+    <div class="head"><span class="badge sev-critical">критичный</span><span class="crit-name">Непротиворечивость</span><span class="badge chip">R28,R29</span><span class="loc">стр. 3, строка 179</span></div>
+    <blockquote>«Description Сохранение порога. Функциональные требования: чтение порога»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В описании метода указано &#34;Сохранение порога&#34;, но REST type GET подразумевает только чтение, а не изменение данных. GET не должен использоваться для операций сохранения.</span></div>
+    <div class="row fix"><span class="k">Исправить</span><span class="v">Использовать метод POST или PUT для сохранения порога, либо скорректировать описание, если операция только читает данные.</span></div>
+  </div>
+  <div class="finding">
+    <div class="head"><span class="badge sev-critical">критичный</span><span class="crit-name">Непротиворечивость</span><span class="badge chip">R46,R47</span><span class="loc">стр. 4, строка 251</span></div>
+    <blockquote>«Content-Type: application/json .»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Указан Content-Type: application/json, но далее сказано &#34;Тело не используется.&#34;. Для GET-запросов тело обычно не передаётся, а Content-Type не требуется. Если метод всё же должен принимать тело, это противоречит REST и приведёт к разной реализации.</span></div>
+    <div class="row fix"><span class="k">Исправить</span><span class="v">Убрать Content-Type или явно указать, что тело не используется и параметры передаются только в query-строке.</span></div>
+  </div>
+  <div class="finding">
+    <div class="head"><span class="badge sev-critical">критичный</span><span class="crit-name">Непротиворечивость</span><span class="badge chip">R55,R48</span><span class="loc">стр. 4, строка 284</span></div>
+    <blockquote>«200. Successful — Created {&#34;result&#34;:&#34;OK&#34;,&#34;amount&#34;:&#34;50000&#34;,&#34;enabled&#34;:&#34;1&#34;} или {&#34;result&#34;:&#34;ERROR&#34;,&#34;message&#34;:&#34;Проверьте сумму&#34;}»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В ответе с кодом 200 может возвращаться result: &#34;ERROR&#34; и message с ошибкой, хотя в R48 сказано: &#34;Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.&#34;. Это приведёт к тому, что ошибка будет передана с успешным HTTP-кодом, что нарушает REST и приведёт к разной обработке ошибок.</span></div>
+    <div class="row fix"><span class="k">Исправить</span><span class="v">Возвращать ошибки только с соответствующими неуспешными HTTP-кодами (например, 400), а не с 200. В ответе с 200 не должно быть result: &#34;ERROR&#34;.</span></div>
+  </div>
+  <div class="finding">
+    <div class="head"><span class="badge sev-critical">критичный</span><span class="crit-name">Непротиворечивость</span><span class="badge chip">R28,R29,R33,R46,R47</span><span class="loc">стр. 3, строка 181</span></div>
+    <blockquote>«REST type GET»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Используется GET для сохранения порога (R28, R33), при этом указан Content-Type: application/json (R46), но тело не используется (R47). GET не должен изменять данные и не должен иметь тело. Это нарушает REST и приведёт к разной реализации.</span></div>
+    <div class="row fix"><span class="k">Исправить</span><span class="v">Изменить метод на POST или PUT для операций сохранения, либо скорректировать описание, если операция только читает данные. Убрать Content-Type и тело для GET.</span></div>
+  </div>
+  <div class="finding">
+    <div class="head"><span class="badge sev-critical">критичный</span><span class="crit-name">Непротиворечивость</span><span class="badge chip">R48,R53,R54,R55,R59</span><span class="loc">стр. 4, строка 254</span></div>
+    <blockquote>«Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В R55 пример ответа с 200 содержит result: &#34;ERROR&#34;, а в R59 ошибка возвращается с 400. Это противоречие приведёт к разной обработке ошибок клиентами.</span></div>
+    <div class="row fix"><span class="k">Исправить</span><span class="v">Установить единое правило: ошибки возвращаются только с неуспешными HTTP-кодами (400 и выше), а успешные ответы — только с result: &#34;OK&#34;.</span></div>
+  </div>
+</div>
+
+
+<h2 id="findings" style="margin-bottom:8px">Найденные нарушения</h2>
+<div class="card toolbar no-print" role="search">
+  <input type="search" id="q" placeholder="Поиск по тексту, ID, разделу…" aria-label="Поиск">
+  <div class="seg" id="sev" role="group" aria-label="Критичность">
+    <button type="button" data-v="" aria-pressed="true">Все</button>
+    <button type="button" data-v="critical" aria-pressed="false">Критичные</button>
+    <button type="button" data-v="major" aria-pressed="false">Существенные</button>
+    <button type="button" data-v="minor" aria-pressed="false">Незначительные</button>
+  </div>
+  <select id="crit" aria-label="Критерий">
+    <option value="">Все критерии</option>
+<option value="necessary">Необходимость</option><option value="appropriate">Уместность уровня (нет лишних проектных решений)</option><option value="unambiguous">Однозначность</option><option value="complete">Полнота</option><option value="singular">Единичность</option><option value="feasible">Выполнимость</option><option value="verifiable">Проверяемость</option><option value="correct">Корректность</option><option value="conforming">Соответствие шаблону/стандарту</option><option value="consistent">Непротиворечивость</option><option value="traceable">Трассируемость</option><option value="comprehensible">Понятность</option><option value="validatable">Валидируемость</option><option value="ranked">Ранжированность по важности и стабильности</option><option value="modifiable">Модифицируемость</option>  </select>
+  <label class="sub"><input type="checkbox" id="onlybad"> только с нарушениями</label>
+  <button type="button" class="btn" id="expand">Раскрыть все</button>
+  <span class="count" id="count"></span>
+</div>
+
+<h2 id="set">Проверка всего набора требований <span class="badge chip">20</span></h2>
+<p class="sub">Противоречия между требованиями, между частью A и спецификацией API, пропуски и несогласованность терминов.</p>
+<div class="card set" id="setlist">  <div class="finding" data-sev="critical" data-crit="consistent" data-text="r14,r15,r17,r25 когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push. r14 требует отправлять push при каждом переходе через порог, а r15 ограничивает максимум одним push за месяц. в r17 указано, что при изменении порога и накопленной сумме ниже нового порога, следующее достижение вызывает push независимо от истории. в критерии r25 не описан случай, если после корректировки порога сумма снова пересекает порог в том же месяце — неясно, должен ли быть второй push. это противоречие: правила не согласованы между собой и с критерием приёмки. уточнить, допускается ли повторный push при изменении порога в течение месяца, если сумма снова пересекает порог, и согласовать формулировки r14, r15, r17 и критерии приёмки.">
+    <div class="head">
+      <span class="badge sev-critical">критичный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R14,R15,R17,R25</span>      <span class="loc">стр. 1, строка 41</span>
+    </div>
+    <blockquote>«Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>R14 требует отправлять push при каждом переходе через порог, а R15 ограничивает максимум одним push за месяц. В R17 указано, что при изменении порога и накопленной сумме ниже нового порога, следующее достижение вызывает push независимо от истории. В критерии R25 не описан случай, если после корректировки порога сумма снова пересекает порог в том же месяце — неясно, должен ли быть второй push. Это противоречие: правила не согласованы между собой и с критерием приёмки.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, допускается ли повторный push при изменении порога в течение месяца, если сумма снова пересекает порог, и согласовать формулировки R14, R15, R17 и критерии приёмки.</span></div>  </div>
+  <div class="finding" data-sev="critical" data-crit="consistent" data-text="r28,r29 description сохранение порога. функциональные требования: чтение порога в описании метода указано &#34;сохранение порога&#34;, но rest type get подразумевает только чтение, а не изменение данных. get не должен использоваться для операций сохранения. использовать метод post или put для сохранения порога, либо скорректировать описание, если операция только читает данные.">
+    <div class="head">
+      <span class="badge sev-critical">критичный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R28,R29</span>      <span class="loc">стр. 3, строка 179</span>
+    </div>
+    <blockquote>«Description Сохранение порога. Функциональные требования: чтение порога»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В описании метода указано &#34;Сохранение порога&#34;, но REST type GET подразумевает только чтение, а не изменение данных. GET не должен использоваться для операций сохранения.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Использовать метод POST или PUT для сохранения порога, либо скорректировать описание, если операция только читает данные.</span></div>  </div>
+  <div class="finding" data-sev="critical" data-crit="consistent" data-text="r46,r47 content-type: application/json . указан content-type: application/json, но далее сказано &#34;тело не используется.&#34;. для get-запросов тело обычно не передаётся, а content-type не требуется. если метод всё же должен принимать тело, это противоречит rest и приведёт к разной реализации. убрать content-type или явно указать, что тело не используется и параметры передаются только в query-строке.">
+    <div class="head">
+      <span class="badge sev-critical">критичный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R46,R47</span>      <span class="loc">стр. 4, строка 251</span>
+    </div>
+    <blockquote>«Content-Type: application/json .»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Указан Content-Type: application/json, но далее сказано &#34;Тело не используется.&#34;. Для GET-запросов тело обычно не передаётся, а Content-Type не требуется. Если метод всё же должен принимать тело, это противоречит REST и приведёт к разной реализации.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Убрать Content-Type или явно указать, что тело не используется и параметры передаются только в query-строке.</span></div>  </div>
+  <div class="finding" data-sev="critical" data-crit="consistent" data-text="r55,r48 200. successful — created {&#34;result&#34;:&#34;ok&#34;,&#34;amount&#34;:&#34;50000&#34;,&#34;enabled&#34;:&#34;1&#34;} или {&#34;result&#34;:&#34;error&#34;,&#34;message&#34;:&#34;проверьте сумму&#34;} в ответе с кодом 200 может возвращаться result: &#34;error&#34; и message с ошибкой, хотя в r48 сказано: &#34;если результат 200 или 201 — успешный. если результат 400, 401 и далее — неуспешный.&#34;. это приведёт к тому, что ошибка будет передана с успешным http-кодом, что нарушает rest и приведёт к разной обработке ошибок. возвращать ошибки только с соответствующими неуспешными http-кодами (например, 400), а не с 200. в ответе с 200 не должно быть result: &#34;error&#34;.">
+    <div class="head">
+      <span class="badge sev-critical">критичный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R55,R48</span>      <span class="loc">стр. 4, строка 284</span>
+    </div>
+    <blockquote>«200. Successful — Created {&#34;result&#34;:&#34;OK&#34;,&#34;amount&#34;:&#34;50000&#34;,&#34;enabled&#34;:&#34;1&#34;} или {&#34;result&#34;:&#34;ERROR&#34;,&#34;message&#34;:&#34;Проверьте сумму&#34;}»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В ответе с кодом 200 может возвращаться result: &#34;ERROR&#34; и message с ошибкой, хотя в R48 сказано: &#34;Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.&#34;. Это приведёт к тому, что ошибка будет передана с успешным HTTP-кодом, что нарушает REST и приведёт к разной обработке ошибок.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Возвращать ошибки только с соответствующими неуспешными HTTP-кодами (например, 400), а не с 200. В ответе с 200 не должно быть result: &#34;ERROR&#34;.</span></div>  </div>
+  <div class="finding" data-sev="critical" data-crit="consistent" data-text="r28,r29,r33,r46,r47 rest type get используется get для сохранения порога (r28, r33), при этом указан content-type: application/json (r46), но тело не используется (r47). get не должен изменять данные и не должен иметь тело. это нарушает rest и приведёт к разной реализации. изменить метод на post или put для операций сохранения, либо скорректировать описание, если операция только читает данные. убрать content-type и тело для get.">
+    <div class="head">
+      <span class="badge sev-critical">критичный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R28,R29,R33,R46,R47</span>      <span class="loc">стр. 3, строка 181</span>
+    </div>
+    <blockquote>«REST type GET»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Используется GET для сохранения порога (R28, R33), при этом указан Content-Type: application/json (R46), но тело не используется (R47). GET не должен изменять данные и не должен иметь тело. Это нарушает REST и приведёт к разной реализации.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Изменить метод на POST или PUT для операций сохранения, либо скорректировать описание, если операция только читает данные. Убрать Content-Type и тело для GET.</span></div>  </div>
+  <div class="finding" data-sev="critical" data-crit="consistent" data-text="r48,r53,r54,r55,r59 если результат 200 или 201 — успешный. если результат 400, 401 и далее — неуспешный. в r55 пример ответа с 200 содержит result: &#34;error&#34;, а в r59 ошибка возвращается с 400. это противоречие приведёт к разной обработке ошибок клиентами. установить единое правило: ошибки возвращаются только с неуспешными http-кодами (400 и выше), а успешные ответы — только с result: &#34;ok&#34;.">
+    <div class="head">
+      <span class="badge sev-critical">критичный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R48,R53,R54,R55,R59</span>      <span class="loc">стр. 4, строка 254</span>
+    </div>
+    <blockquote>«Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В R55 пример ответа с 200 содержит result: &#34;ERROR&#34;, а в R59 ошибка возвращается с 400. Это противоречие приведёт к разной обработке ошибок клиентами.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Установить единое правило: ошибки возвращаются только с неуспешными HTTP-кодами (400 и выше), а успешные ответы — только с result: &#34;OK&#34;.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="consistent" data-text="r08,r22,r39 держатель активной карты kzt задаёт целый порог от 1 000 до 1 000 000 ₸ включительно. в r08 и r39 порог указывается в тенге, а в r22 поле хранения порога — в тенге, но сумма покупки хранится в тиынах. не указано, в каких единицах сравниваются расходы и порог при расчёте достижения порога. это может привести к ошибке округления или неверному сравнению. явно указать, в каких единицах (тенге или тиыны) сравниваются расходы и порог при расчёте достижения порога, и привести к единому формату хранения и передачи.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R08,R22,R39</span>      <span class="loc">стр. 1, строка 36</span>
+    </div>
+    <blockquote>«Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В R08 и R39 порог указывается в тенге, а в R22 поле хранения порога — в тенге, но сумма покупки хранится в тиынах. Не указано, в каких единицах сравниваются расходы и порог при расчёте достижения порога. Это может привести к ошибке округления или неверному сравнению.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Явно указать, в каких единицах (тенге или тиыны) сравниваются расходы и порог при расчёте достижения порога, и привести к единому формату хранения и передачи.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="consistent" data-text="r12,r26 возврат уменьшает расходы месяца исходной покупки. r12 требует уменьшать расходы месяца исходной покупки при возврате, но в критерии приёмки r26 не описан случай возврата, совершённого в другом месяце. неясно, как корректируется счётчик и влияет ли это на достижение порога и отправку push. добавить критерий приёмки, описывающий возврат, совершённый в другом месяце, и явно указать, влияет ли это на достижение порога и push.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R12,R26</span>      <span class="loc">стр. 1, строка 39</span>
+    </div>
+    <blockquote>«Возврат уменьшает расходы месяца исходной покупки.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>R12 требует уменьшать расходы месяца исходной покупки при возврате, но в критерии приёмки R26 не описан случай возврата, совершённого в другом месяце. Неясно, как корректируется счётчик и влияет ли это на достижение порога и отправку push.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Добавить критерий приёмки, описывающий возврат, совершённый в другом месяце, и явно указать, влияет ли это на достижение порога и push.</span></div>    <details class="related"><summary>Связанные замечания к этому же месту: 1</summary>
+      <ul><li><span class="badge sev-major">существенный</span> <b>Непротиворечивость</b> — R13 исключает переводы и снятие наличных из расходов, но в критерии приёмки R27 не описан случай снятия наличных. Это может привести к разночтениям в расчёте расходов. <span class="sub">→ Добавить критерий приёмки для снятия наличных, чтобы подтвердить, что такие операции не учитываются в расходах.</span></li></ul>
+    </details>
+  </div>
+  <div class="finding" data-sev="major" data-crit="consistent" data-text="r21,r14 сервис передаёт push на отправку в течение минуты после получения события. r21 требует отправки push в течение минуты после события, а r14 — отправлять push при достижении порога. не указано, что считать моментом события: проведение покупки, пересчёт расходов или момент перехода через порог. это может привести к разночтениям в sla. явно определить, от какого события отсчитывается минута для отправки push (например, от момента проведения покупки или от момента пересчёта расходов и фиксации достижения порога).">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R21,R14</span>      <span class="loc">стр. 2, строка 50</span>
+    </div>
+    <blockquote>«Сервис передаёт push на отправку в течение минуты после получения события.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>R21 требует отправки push в течение минуты после события, а R14 — отправлять push при достижении порога. Не указано, что считать моментом события: проведение покупки, пересчёт расходов или момент перехода через порог. Это может привести к разночтениям в SLA.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Явно определить, от какого события отсчитывается минута для отправки push (например, от момента проведения покупки или от момента пересчёта расходов и фиксации достижения порога).</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="comprehensible" data-text="r23,r42 приложение читает и сохраняет настройки через дочерний документ «уведомление о расходах по карте — rest api». в архитектуре и интеграционных требованиях используются разные наименования компонентов: «сервис настроек», «alertscontroller», «хранилище настроек», «сервис расходов». неясно, какие именно компоненты реализуют функции, что затрудняет понимание архитектуры и трассировку требований. привести наименования всех компонентов к единому стилю во всех разделах (архитектура, sequence, интеграция, rest api) и добавить описание соответствия между ними.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Понятность</span>
+<span class="badge chip">R23,R42</span>      <span class="loc">стр. 2, строка 55</span>
+    </div>
+    <blockquote>«Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API».»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В архитектуре и интеграционных требованиях используются разные наименования компонентов: «сервис настроек», «AlertsController», «хранилище настроек», «сервис расходов». Неясно, какие именно компоненты реализуют функции, что затрудняет понимание архитектуры и трассировку требований.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Привести наименования всех компонентов к единому стилю во всех разделах (архитектура, sequence, интеграция, REST API) и добавить описание соответствия между ними.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="consistent" data-text="r07,r24 проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение. r24 требует, чтобы повторная доставка одного события процессинга сохраняла исходный итог, но в r07 не описано, как система определяет повтор события и предотвращает повторную отправку push. это может привести к дублирующим уведомлениям. уточнить механизм идемпотентности: как определяется повтор события и как предотвращается повторная отправка push при повторной доставке события процессинга.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R07,R24</span>      <span class="loc">стр. 1, строка 33</span>
+    </div>
+    <blockquote>«Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>R24 требует, чтобы повторная доставка одного события процессинга сохраняла исходный итог, но в R07 не описано, как система определяет повтор события и предотвращает повторную отправку push. Это может привести к дублирующим уведомлениям.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить механизм идемпотентности: как определяется повтор события и как предотвращается повторная отправка push при повторной доставке события процессинга.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r08,r09,r16 по умолчанию уведомление выключено. в r09 указано, что уведомление по умолчанию выключено, но не описано, что происходит с накопленной суммой и порогом при первом включении или повторном включении после отключения. неясно, как считается первый push после включения. добавить описание поведения при первом включении уведомления и при повторном включении после отключения: как определяется накопленная сумма и когда отправляется первый push.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+<span class="badge chip">R08,R09,R16</span>      <span class="loc">стр. 1, строка 36</span>
+    </div>
+    <blockquote>«По умолчанию уведомление выключено.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В R09 указано, что уведомление по умолчанию выключено, но не описано, что происходит с накопленной суммой и порогом при первом включении или повторном включении после отключения. Неясно, как считается первый push после включения.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Добавить описание поведения при первом включении уведомления и при повторном включении после отключения: как определяется накопленная сумма и когда отправляется первый push.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="traceable" data-text="r08,r39 держатель активной карты kzt задаёт целый порог от 1 000 до 1 000 000 ₸ включительно. в r08 и r39 указаны правила задания порога, но нет явной связи с rest api: не указано, как эти ограничения реализованы на уровне api (валидация, коды ошибок). трассируемость нарушена. добавить в спецификацию rest api описание валидации порога, коды ошибок при нарушении границ и ссылку на соответствующее требование.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Трассируемость</span>
+<span class="badge chip">R08,R39</span>      <span class="loc">стр. 1, строка 36</span>
+    </div>
+    <blockquote>«Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В R08 и R39 указаны правила задания порога, но нет явной связи с REST API: не указано, как эти ограничения реализованы на уровне API (валидация, коды ошибок). Трассируемость нарушена.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Добавить в спецификацию REST API описание валидации порога, коды ошибок при нарушении границ и ссылку на соответствующее требование.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="consistent" data-text="r44,r50 amount integer 32 bit да 1 000–1 000 000 порог в тенге limit_kzt в параметрах запроса amount — integer, а в ответе amount — string. это приведёт к неоднозначности при сериализации и десериализации данных между клиентом и сервером. привести тип amount к единому формату (integer или string) во всех частях api.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R44,R50</span>      <span class="loc">стр. 4, строка 235</span>
+    </div>
+    <blockquote>«amount integer 32 bit Да 1 000–1 000 000 Порог в тенге limit_kzt»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В параметрах запроса amount — integer, а в ответе amount — string. Это приведёт к неоднозначности при сериализации и десериализации данных между клиентом и сервером.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Привести тип amount к единому формату (integer или string) во всех частях API.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="consistent" data-text="r45,r51 enabled integer 1 знак да 0 или 1 признак включения enabled в параметрах запроса enabled — integer (0 или 1), а в ответе enabled — string («0» или «1»). это нарушает согласованность типов и может привести к ошибкам при интеграции. использовать одинаковый тип для enabled во всех частях api (integer или string).">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R45,R51</span>      <span class="loc">стр. 4, строка 243</span>
+    </div>
+    <blockquote>«enabled integer 1 знак Да 0 или 1 Признак включения enabled»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В параметрах запроса enabled — integer (0 или 1), а в ответе enabled — string («0» или «1»). Это нарушает согласованность типов и может привести к ошибкам при интеграции.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Использовать одинаковый тип для enabled во всех частях API (integer или string).</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="consistent" data-text="r62,r63 для чужой карты возвращается 404, как и для отсутствующей карты. в r62 указано, что для чужой карты и отсутствующей карты возвращается 404, но в r35 (&#34;проверить принадлежность карты клиенту.&#34;) не описано, что будет возвращено при ошибке принадлежности. это может привести к разночтениям в реализации. явно указать, что при попытке изменить чужую карту возвращается 404, и описать это в логике метода.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Непротиворечивость</span>
+<span class="badge chip">R62,R63</span>      <span class="loc">стр. 5, строка 296</span>
+    </div>
+    <blockquote>«Для чужой карты возвращается 404, как и для отсутствующей карты.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>В R62 указано, что для чужой карты и отсутствующей карты возвращается 404, но в R35 (&#34;Проверить принадлежность карты клиенту.&#34;) не описано, что будет возвращено при ошибке принадлежности. Это может привести к разночтениям в реализации.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Явно указать, что при попытке изменить чужую карту возвращается 404, и описать это в логике метода.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="traceable" data-text="r23 приложение читает и сохраняет настройки через дочерний документ «уведомление о расходах по карте — rest api». трассируемость между целями, требованиями, критериями приёмки и api не обеспечена: нет явных связей между функциональными требованиями и соответствующими методами api. добавить идентификаторы требований и критериев приёмки в описание методов api для обеспечения трассируемости.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Трассируемость</span>
+<span class="badge chip">R23</span>      <span class="loc">стр. 2, строка 55</span>
+    </div>
+    <blockquote>«Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API».»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Трассируемость между целями, требованиями, критериями приёмки и API не обеспечена: нет явных связей между функциональными требованиями и соответствующими методами API.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Добавить идентификаторы требований и критериев приёмки в описание методов API для обеспечения трассируемости.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="set заполняются тестировщиками раздел или поле не заполнено: вместо содержания — заглушка. проверить и реализовать по нему нельзя. заполнить раздел до начала разработки.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+<span class="badge chip">SET</span>      <span class="loc">стр. 2, строка 59</span>
+    </div>
+    <blockquote>«заполняются тестировщиками»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Раздел или поле не заполнено: вместо содержания — заглушка. Проверить и реализовать по нему нельзя.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Заполнить раздел до начала разработки.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="set документ (версия/дата) в источнике не заполнен. пункты чек-листа приведены как в шаблоне, отметки раздел или поле не заполнено: вместо содержания — заглушка. проверить и реализовать по нему нельзя. заполнить раздел до начала разработки.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+<span class="badge chip">SET</span>      <span class="loc">стр. 2, строка 79</span>
+    </div>
+    <blockquote>«Документ (версия/дата) в источнике не заполнен. Пункты чек-листа приведены как в шаблоне, отметки»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Раздел или поле не заполнено: вместо содержания — заглушка. Проверить и реализовать по нему нельзя.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Заполнить раздел до начала разработки.</span></div>  </div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="set да / нет чек-лист не заполнен: варианты ответа оставлены без отметки. заполнить раздел до начала разработки.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+<span class="badge chip">SET</span>      <span class="loc">стр. 2, строка 89</span>
+    </div>
+    <blockquote>«Да / Нет»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Чек-лист не заполнен: варианты ответа оставлены без отметки.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Заполнить раздел до начала разработки.</span></div>  </div>
+<div class="empty hidden" id="setnone">Под фильтры ничего не попало.</div></div>
+
+<h2 id="reqs">Проверка каждого требования</h2>
+
+<div id="reqlist">
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r01  часть a. новый функционал / цели дать клиенту возможность узнать о достижении личного бюджета в момент покупки. ">
+  <summary>
+    <span class="rid">R01</span>
+    <span class="q">Дать клиенту возможность узнать о достижении личного бюджета в момент покупки.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Цели · стр. 1, строка 25</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="appropriate"
+  data-text="r02  часть a. новый функционал / архитектура решения мобильное приложение → сервис настроек. требование описывает архитектурное решение (конкретный маршрут передачи данных), а не функциональную необходимость, что ограничивает варианты реализации и не даёт понять, зачем это нужно.">
+  <summary>
+    <span class="rid">R02</span>
+    <span class="q">Мобильное приложение → сервис настроек.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Архитектура решения · стр. 1, строка 27</span></div>
+  <div class="finding" data-sev="major" data-crit="appropriate" data-text="r02 мобильное приложение → сервис настроек. требование описывает архитектурное решение (конкретный маршрут передачи данных), а не функциональную необходимость, что ограничивает варианты реализации и не даёт понять, зачем это нужно. заменить на функциональное требование: «клиент должен иметь возможность настраивать уведомления о бюджете через мобильное приложение».">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Уместность уровня (нет лишних проектных решений)</span>
+      <span class="loc">стр. 1, строка 27</span>
+    </div>
+    <blockquote>«Мобильное приложение → сервис настроек.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Требование описывает архитектурное решение (конкретный маршрут передачи данных), а не функциональную необходимость, что ограничивает варианты реализации и не даёт понять, зачем это нужно.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Заменить на функциональное требование: «Клиент должен иметь возможность настраивать уведомления о бюджете через мобильное приложение».</span></div>    <details class="related"><summary>Связанные замечания к этому же месту: 1</summary>
+      <ul><li><span class="badge sev-minor">незначительный</span> <b>Уместность уровня (нет лишних проектных решений)</b> — Требование описывает архитектурную схему передачи данных, а не поведение или результат, что не соответствует уровню требований. <span class="sub">→ Заменить на требование к результату взаимодействия, а не к архитектуре передачи.</span></li></ul>
+    </details>
+  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="appropriate"
+  data-text="r03  часть a. новый функционал / архитектура решения карточный процессинг → учёт расходов → сервис push. требование навязывает конкретную схему взаимодействия сервисов, что является проектным решением и не отражает, какую задачу должен решать продукт.">
+  <summary>
+    <span class="rid">R03</span>
+    <span class="q">Карточный процессинг → учёт расходов → сервис push.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Архитектура решения · стр. 1, строка 27</span></div>
+  <div class="finding" data-sev="major" data-crit="appropriate" data-text="r03 карточный процессинг → учёт расходов → сервис push. требование навязывает конкретную схему взаимодействия сервисов, что является проектным решением и не отражает, какую задачу должен решать продукт. сформулировать требование как функциональное: «при достижении порога расходов клиенту должно быть отправлено push-уведомление».">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Уместность уровня (нет лишних проектных решений)</span>
+      <span class="loc">стр. 1, строка 27</span>
+    </div>
+    <blockquote>«Карточный процессинг → учёт расходов → сервис push.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Требование навязывает конкретную схему взаимодействия сервисов, что является проектным решением и не отражает, какую задачу должен решать продукт.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Сформулировать требование как функциональное: «При достижении порога расходов клиенту должно быть отправлено push-уведомление».</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r04  часть a. новый функционал / дизайн процесса ui карты → расходы → уведомления. ">
+  <summary>
+    <span class="rid">R04</span>
+    <span class="q">Карты → Расходы → Уведомления.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Дизайн процесса UI · стр. 1, строка 29</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r05  часть a. новый функционал / дизайн процесса ui на экране видны переключатель, поле «порог, ₸», сумма за месяц и кнопка «сохранить». ">
+  <summary>
+    <span class="rid">R05</span>
+    <span class="q">На экране видны переключатель, поле «Порог, ₸», сумма за месяц и кнопка «Сохранить».</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Дизайн процесса UI · стр. 1, строка 29</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r06  часть a. новый функционал / дизайн процесса ui при ошибке ввода сообщение появляется под полем. ">
+  <summary>
+    <span class="rid">R06</span>
+    <span class="q">При ошибке ввода сообщение появляется под полем.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Дизайн процесса UI · стр. 1, строка 30</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r07  часть a. новый функционал / требования к изменениям проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение. ">
+  <summary>
+    <span class="rid">R07</span>
+    <span class="q">Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 33</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r08 ф-1 часть a. новый функционал / требования к изменениям держатель активной карты kzt задаёт целый порог от 1 000 до 1 000 000 ₸ включительно. ">
+  <summary>
+    <span class="rid">R08 <span class="sub">· Ф-1</span></span>
+    <span class="q">Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 36</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r09 ф-1 часть a. новый функционал / требования к изменениям по умолчанию уведомление выключено. ">
+  <summary>
+    <span class="rid">R09 <span class="sub">· Ф-1</span></span>
+    <span class="q">По умолчанию уведомление выключено.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 36</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r10 ф-2 часть a. новый функционал / требования к изменениям месяц определяется по дате совершения покупки в алматы. не указано, какой часовой пояс используется для определения даты покупки, что может привести к разночтениям при обработке транзакций, совершённых вблизи смены суток.">
+  <summary>
+    <span class="rid">R10 <span class="sub">· Ф-2</span></span>
+    <span class="q">Месяц определяется по дате совершения покупки в Алматы.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 38</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r10 месяц определяется по дате совершения покупки в алматы. не указано, какой часовой пояс используется для определения даты покупки, что может привести к разночтениям при обработке транзакций, совершённых вблизи смены суток. уточнить, в каком часовом поясе определяется дата совершения покупки (например, «по времени алматы, utc+6» или явно указать требуемый часовой пояс).">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 1, строка 38</span>
+    </div>
+    <blockquote>«Месяц определяется по дате совершения покупки в Алматы.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, какой часовой пояс используется для определения даты покупки, что может привести к разночтениям при обработке транзакций, совершённых вблизи смены суток.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, в каком часовом поясе определяется дата совершения покупки (например, «по времени Алматы, UTC+6» или явно указать требуемый часовой пояс).</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r11 ф-2 часть a. новый функционал / требования к изменениям в расходы входят проведённые покупки. не определено, что считать «проведённой покупкой»: неясно, включаются ли покупки в обработке, отменённые, частично проведённые, а также что с покупками в других валютах.">
+  <summary>
+    <span class="rid">R11 <span class="sub">· Ф-2</span></span>
+    <span class="q">В расходы входят проведённые покупки.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 38</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r11 в расходы входят проведённые покупки. не определено, что считать «проведённой покупкой»: неясно, включаются ли покупки в обработке, отменённые, частично проведённые, а также что с покупками в других валютах. уточнить, что считать проведённой покупкой: только успешно завершённые операции по карте в kzt, не отменённые и не возвращённые.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 1, строка 38</span>
+    </div>
+    <blockquote>«В расходы входят проведённые покупки.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не определено, что считать «проведённой покупкой»: неясно, включаются ли покупки в обработке, отменённые, частично проведённые, а также что с покупками в других валютах.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что считать проведённой покупкой: только успешно завершённые операции по карте в KZT, не отменённые и не возвращённые.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r12 ф-2 часть a. новый функционал / требования к изменениям возврат уменьшает расходы месяца исходной покупки. не описано, что делать, если возврат превышает сумму покупки, или если возврат частичный; не указано, как обрабатывать возвраты по покупкам прошлых месяцев.">
+  <summary>
+    <span class="rid">R12 <span class="sub">· Ф-2</span></span>
+    <span class="q">Возврат уменьшает расходы месяца исходной покупки.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 39</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r12 возврат уменьшает расходы месяца исходной покупки. не описано, что делать, если возврат превышает сумму покупки, или если возврат частичный; не указано, как обрабатывать возвраты по покупкам прошлых месяцев. уточнить, что возврат уменьшает расходы не более чем на сумму покупки, и описать поведение при возврате в другой месяц.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 1, строка 39</span>
+    </div>
+    <blockquote>«Возврат уменьшает расходы месяца исходной покупки.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не описано, что делать, если возврат превышает сумму покупки, или если возврат частичный; не указано, как обрабатывать возвраты по покупкам прошлых месяцев.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что возврат уменьшает расходы не более чем на сумму покупки, и описать поведение при возврате в другой месяц.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r13 ф-2 часть a. новый функционал / требования к изменениям переводы и снятие наличных исключаются. ">
+  <summary>
+    <span class="rid">R13 <span class="sub">· Ф-2</span></span>
+    <span class="q">Переводы и снятие наличных исключаются.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 39</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r14 ф-3 часть a. новый функционал / требования к изменениям когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push. не указано, что считать моментом перехода: при какой операции, если несколько покупок одновременно, и как считать при возвратах; не определено, что делать при повторном достижении порога в том же месяце.">
+  <summary>
+    <span class="rid">R14 <span class="sub">· Ф-3</span></span>
+    <span class="q">Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 41</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r14 когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push. не указано, что считать моментом перехода: при какой операции, если несколько покупок одновременно, и как считать при возвратах; не определено, что делать при повторном достижении порога в том же месяце. уточнить, что push отправляется при первой операции, увеличивающей расходы месяца до значения, равного или превышающего порог, если push ещё не был отправлен в этом месяце.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 1, строка 41</span>
+    </div>
+    <blockquote>«Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, что считать моментом перехода: при какой операции, если несколько покупок одновременно, и как считать при возвратах; не определено, что делать при повторном достижении порога в том же месяце.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что push отправляется при первой операции, увеличивающей расходы месяца до значения, равного или превышающего порог, если push ещё не был отправлен в этом месяце.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r15 ф-3 часть a. новый функционал / требования к изменениям на карту приходится максимум один такой push за календарный месяц. не определено, что делать при изменении порога в течение месяца: сбрасывается ли лимит push, и как считать месяц (по какому времени).">
+  <summary>
+    <span class="rid">R15 <span class="sub">· Ф-3</span></span>
+    <span class="q">На карту приходится максимум один такой push за календарный месяц.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 42</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r15 на карту приходится максимум один такой push за календарный месяц. не определено, что делать при изменении порога в течение месяца: сбрасывается ли лимит push, и как считать месяц (по какому времени). уточнить, сбрасывается ли лимит push при изменении порога, и явно указать, что месяц считается по времени алматы.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 1, строка 42</span>
+    </div>
+    <blockquote>«На карту приходится максимум один такой push за календарный месяц.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не определено, что делать при изменении порога в течение месяца: сбрасывается ли лимит push, и как считать месяц (по какому времени).</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, сбрасывается ли лимит push при изменении порога, и явно указать, что месяц считается по времени Алматы.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r16 ф-4 часть a. новый функционал / требования к изменениям при изменении порога накопленная сумма сохраняется. неясно, что делать, если новая сумма порога меньше накопленной: будет ли push отправлен сразу или только при следующей покупке.">
+  <summary>
+    <span class="rid">R16 <span class="sub">· Ф-4</span></span>
+    <span class="q">При изменении порога накопленная сумма сохраняется.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 43</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r16 при изменении порога накопленная сумма сохраняется. неясно, что делать, если новая сумма порога меньше накопленной: будет ли push отправлен сразу или только при следующей покупке. уточнить, что push не отправляется при изменении порога, даже если накопленная сумма уже превышает новый порог, а только при следующей операции.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 1, строка 43</span>
+    </div>
+    <blockquote>«При изменении порога накопленная сумма сохраняется.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Неясно, что делать, если новая сумма порога меньше накопленной: будет ли push отправлен сразу или только при следующей покупке.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что push не отправляется при изменении порога, даже если накопленная сумма уже превышает новый порог, а только при следующей операции.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r17 ф-4 часть a. новый функционал / требования к изменениям если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки. не определено, что делать, если накопленная сумма равна новому порогу, и как считать «следующее достижение» — при какой операции и в каком месяце.">
+  <summary>
+    <span class="rid">R17 <span class="sub">· Ф-4</span></span>
+    <span class="q">Если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к изменениям · стр. 1, строка 43</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r17 если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки. не определено, что делать, если накопленная сумма равна новому порогу, и как считать «следующее достижение» — при какой операции и в каком месяце. уточнить, что push отправляется при первой операции, увеличивающей сумму до порога или выше, если накопленная сумма была ниже порога на момент изменения.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 1, строка 43</span>
+    </div>
+    <blockquote>«Если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не определено, что делать, если накопленная сумма равна новому порогу, и как считать «следующее достижение» — при какой операции и в каком месяце.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что push отправляется при первой операции, увеличивающей сумму до порога или выше, если накопленная сумма была ниже порога на момент изменения.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r18  часть a. новый функционал / sequence diagram процессинг → сервис расходов: проведена покупка. не указано, какие параметры передаются (идентификатор карты, сумма, валюта, дата, статус операции), что критично для интеграции и тестирования.">
+  <summary>
+    <span class="rid">R18</span>
+    <span class="q">Процессинг → сервис расходов: проведена покупка.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Sequence Diagram · стр. 1, строка 46</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r18 процессинг → сервис расходов: проведена покупка. не указано, какие параметры передаются (идентификатор карты, сумма, валюта, дата, статус операции), что критично для интеграции и тестирования. добавить перечень обязательных параметров: идентификатор карты, сумма, валюта, дата и время операции, статус проведения.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 1, строка 46</span>
+    </div>
+    <blockquote>«Процессинг → сервис расходов: проведена покупка.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, какие параметры передаются (идентификатор карты, сумма, валюта, дата, статус операции), что критично для интеграции и тестирования.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Добавить перечень обязательных параметров: идентификатор карты, сумма, валюта, дата и время операции, статус проведения.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r19  часть a. новый функционал / sequence diagram сервис расходов → настройки: получить порог карты. ">
+  <summary>
+    <span class="rid">R19</span>
+    <span class="q">Сервис расходов → настройки: получить порог карты.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Sequence Diagram · стр. 1, строка 46</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r20  часть a. новый функционал / sequence diagram сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога. не указано, в каких единицах и формате передаётся сумма, и что делать, если сумма превышает порог (передавать только порог или фактическую сумму).">
+  <summary>
+    <span class="rid">R20</span>
+    <span class="q">Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Sequence Diagram · стр. 1, строка 47</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r20 сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога. не указано, в каких единицах и формате передаётся сумма, и что делать, если сумма превышает порог (передавать только порог или фактическую сумму). уточнить, что передаётся фактическая сумма расходов в тенге, целым числом, и последние четыре цифры карты строкой.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 1, строка 47</span>
+    </div>
+    <blockquote>«Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, в каких единицах и формате передаётся сумма, и что делать, если сумма превышает порог (передавать только порог или фактическую сумму).</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что передаётся фактическая сумма расходов в тенге, целым числом, и последние четыре цифры карты строкой.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r21  часть a. новый функционал / нефункциональные требования сервис передаёт push на отправку в течение минуты после получения события. не указано, от какого именно события отсчитывается минута (например, получение события процессинга или другое), и для какой доли событий это должно выполняться.">
+  <summary>
+    <span class="rid">R21</span>
+    <span class="q">Сервис передаёт push на отправку в течение минуты после получения события.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Нефункциональные требования · стр. 2, строка 50</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r21 сервис передаёт push на отправку в течение минуты после получения события. не указано, от какого именно события отсчитывается минута (например, получение события процессинга или другое), и для какой доли событий это должно выполняться. уточнить, от какого события начинается отсчёт времени и для какой доли событий (например, 99% push-уведомлений должны быть отправлены в течение 1 минуты после получения события процессинга).">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 2, строка 50</span>
+    </div>
+    <blockquote>«Сервис передаёт push на отправку в течение минуты после получения события.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, от какого именно события отсчитывается минута (например, получение события процессинга или другое), и для какой доли событий это должно выполняться.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, от какого события начинается отсчёт времени и для какой доли событий (например, 99% push-уведомлений должны быть отправлены в течение 1 минуты после получения события процессинга).</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r22  часть a. новый функционал / требования к данным хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге. не указаны форматы и типы данных для каждого поля, не определено, что означает &#39;месяц&#39; (номер, дата начала, строка), и неясно, что такое &#39;признак отправки&#39; (булево, дата, статус).">
+  <summary>
+    <span class="rid">R22</span>
+    <span class="q">Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к данным · стр. 2, строка 52</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r22 хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге. не указаны форматы и типы данных для каждого поля, не определено, что означает &#39;месяц&#39; (номер, дата начала, строка), и неясно, что такое &#39;признак отправки&#39; (булево, дата, статус). для каждого поля указать тип, формат, допустимые значения и описание (например, месяц — строка yyyy-mm, признак отправки — булево: true/false).">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 2, строка 52</span>
+    </div>
+    <blockquote>«Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указаны форматы и типы данных для каждого поля, не определено, что означает &#39;месяц&#39; (номер, дата начала, строка), и неясно, что такое &#39;признак отправки&#39; (булево, дата, статус).</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Для каждого поля указать тип, формат, допустимые значения и описание (например, месяц — строка YYYY-MM, признак отправки — булево: true/false).</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r23  часть a. новый функционал / требования к интеграции приложение читает и сохраняет настройки через дочерний документ «уведомление о расходах по карте — rest api». ">
+  <summary>
+    <span class="rid">R23</span>
+    <span class="q">Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API».</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к интеграции · стр. 2, строка 55</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r24  часть a. новый функционал / требования к интеграции повторная доставка одного события процессинга сохраняет исходный итог. не определено, по какому признаку событие считается повторным (например, по идентификатору операции), и что делать, если итог уже изменён вручную или по другой причине.">
+  <summary>
+    <span class="rid">R24</span>
+    <span class="q">Повторная доставка одного события процессинга сохраняет исходный итог.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Требования к интеграции · стр. 2, строка 56</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r24 повторная доставка одного события процессинга сохраняет исходный итог. не определено, по какому признаку событие считается повторным (например, по идентификатору операции), и что делать, если итог уже изменён вручную или по другой причине. уточнить, что событие считается повторным по идентификатору операции, и описать поведение при расхождении итогов.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 2, строка 56</span>
+    </div>
+    <blockquote>«Повторная доставка одного события процессинга сохраняет исходный итог.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не определено, по какому признаку событие считается повторным (например, по идентификатору операции), и что делать, если итог уже изменён вручную или по другой причине.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что событие считается повторным по идентификатору операции, и описать поведение при расхождении итогов.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="verifiable"
+  data-text="r25  часть a. новый функционал / критерии приемки расходы 48 500 ₸, порог 50 000 ₸ провести покупку на 1 500 ₸ итог 50 000 ₸ и один push не указано, как устанавливаются исходные расходы и порог, и что считать &#39;одним push&#39; (например, отсутствие дубликатов, канал доставки).">
+  <summary>
+    <span class="rid">R25</span>
+    <span class="q">Расходы 48 500 ₸, порог 50 000 ₸ Провести покупку на 1 500 ₸ Итог 50 000 ₸ и один push</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Критерии приемки · стр. 2, строка 64</span></div>
+  <div class="finding" data-sev="major" data-crit="verifiable" data-text="r25 расходы 48 500 ₸, порог 50 000 ₸ провести покупку на 1 500 ₸ итог 50 000 ₸ и один push не указано, как устанавливаются исходные расходы и порог, и что считать &#39;одним push&#39; (например, отсутствие дубликатов, канал доставки). добавить шаги по установке исходных значений и критерий уникальности push-уведомления.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Проверяемость</span>
+      <span class="loc">стр. 2, строка 64</span>
+    </div>
+    <blockquote>«Расходы 48 500 ₸, порог 50 000 ₸ Провести покупку на 1 500 ₸ Итог 50 000 ₸ и один push»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, как устанавливаются исходные расходы и порог, и что считать &#39;одним push&#39; (например, отсутствие дубликатов, канал доставки).</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Добавить шаги по установке исходных значений и критерий уникальности push-уведомления.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r26  часть a. новый функционал / критерии приемки покупка 31 января в 23:58 на 4 000 ₸ провести 1 февраля в 00:03 по алматы февральский счётчик вырос на 4 000 ₸ ">
+  <summary>
+    <span class="rid">R26</span>
+    <span class="q">Покупка 31 января в 23:58 на 4 000 ₸ Провести 1 февраля в 00:03 по Алматы Февральский счётчик вырос на 4 000 ₸</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Критерии приемки · стр. 2, строка 68</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r27  часть a. новый функционал / критерии приемки расходы 19 900 ₸, порог 20 000 ₸ перевести 500 ₸ счётчик показывает 19 900 ₸ ">
+  <summary>
+    <span class="rid">R27</span>
+    <span class="q">Расходы 19 900 ₸, порог 20 000 ₸ Перевести 500 ₸ Счётчик показывает 19 900 ₸</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть A. Новый функционал / Критерии приемки · стр. 2, строка 74</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="minor" data-crits="unambiguous"
+  data-text="r28  часть b. rest api / общие параметры description сохранение порога. функциональные требования: чтение порога неясно, к какому действию относится описание: сохранение или чтение порога, и что именно делает операция.">
+  <summary>
+    <span class="rid">R28</span>
+    <span class="q">Description Сохранение порога. Функциональные требования: чтение порога</span>
+    <span class="badges">
+<span class="badge sev-minor">незначительный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Общие параметры · стр. 3, строка 179</span></div>
+  <div class="finding" data-sev="minor" data-crit="unambiguous" data-text="r28 description сохранение порога. функциональные требования: чтение порога неясно, к какому действию относится описание: сохранение или чтение порога, и что именно делает операция. разделить описание для операций сохранения и чтения порога, явно указать действие.">
+    <div class="head">
+      <span class="badge sev-minor">незначительный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 3, строка 179</span>
+    </div>
+    <blockquote>«Description Сохранение порога. Функциональные требования: чтение порога»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Неясно, к какому действию относится описание: сохранение или чтение порога, и что именно делает операция.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Разделить описание для операций сохранения и чтения порога, явно указать действие.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r29  часть b. rest api / общие параметры rest type get ">
+  <summary>
+    <span class="rid">R29</span>
+    <span class="q">REST type GET</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Общие параметры · стр. 3, строка 181</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r30  часть b. rest api / общие параметры authorization bearer, сессия владельца карты ">
+  <summary>
+    <span class="rid">R30</span>
+    <span class="q">Authorization Bearer, сессия владельца карты</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Общие параметры · стр. 3, строка 183</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="minor" data-crits="unambiguous"
+  data-text="r31  часть b. rest api / общие параметры controller alertscontroller неясно, что означает эта строка: имя класса, название контроллера, часть url или что-то ещё. нет описания назначения и контекста.">
+  <summary>
+    <span class="rid">R31</span>
+    <span class="q">Controller AlertsController</span>
+    <span class="badges">
+<span class="badge sev-minor">незначительный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Общие параметры · стр. 3, строка 185</span></div>
+  <div class="finding" data-sev="minor" data-crit="unambiguous" data-text="r31 controller alertscontroller неясно, что означает эта строка: имя класса, название контроллера, часть url или что-то ещё. нет описания назначения и контекста. уточнить, что означает alertscontroller: имя класса, контроллера или иной объект, и где он используется.">
+    <div class="head">
+      <span class="badge sev-minor">незначительный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 3, строка 185</span>
+    </div>
+    <blockquote>«Controller AlertsController»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Неясно, что означает эта строка: имя класса, название контроллера, часть URL или что-то ещё. Нет описания назначения и контекста.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что означает AlertsController: имя класса, контроллера или иной объект, и где он используется.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="minor" data-crits="unambiguous"
+  data-text="r32  часть b. rest api / общие параметры url type dev / prod не указано, что означает &#39;dev / prod&#39;: это разные адреса, параметры, окружения или что-то ещё. нет формата или примера.">
+  <summary>
+    <span class="rid">R32</span>
+    <span class="q">URL type Dev / Prod</span>
+    <span class="badges">
+<span class="badge sev-minor">незначительный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Общие параметры · стр. 3, строка 187</span></div>
+  <div class="finding" data-sev="minor" data-crit="unambiguous" data-text="r32 url type dev / prod не указано, что означает &#39;dev / prod&#39;: это разные адреса, параметры, окружения или что-то ещё. нет формата или примера. явно указать, что означает &#39;dev / prod&#39; — окружение, тип url, пример значений.">
+    <div class="head">
+      <span class="badge sev-minor">незначительный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 3, строка 187</span>
+    </div>
+    <blockquote>«URL type Dev / Prod»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, что означает &#39;Dev / Prod&#39;: это разные адреса, параметры, окружения или что-то ещё. Нет формата или примера.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Явно указать, что означает &#39;Dev / Prod&#39; — окружение, тип URL, пример значений.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r33  часть b. rest api / общие параметры request url dev: /alerts/savelimit . prod: — для prod не указан url или явно указано его отсутствие, но не объяснено поведение: метод недоступен, отключён или другое.">
+  <summary>
+    <span class="rid">R33</span>
+    <span class="q">Request URL Dev: /alerts/saveLimit . Prod: —</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Общие параметры · стр. 3, строка 189</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r33 request url dev: /alerts/savelimit . prod: — для prod не указан url или явно указано его отсутствие, но не объяснено поведение: метод недоступен, отключён или другое. уточнить, что означает &#39;prod: —&#39;: метод недоступен, отключён или требуется иной путь.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 3, строка 189</span>
+    </div>
+    <blockquote>«Request URL Dev: /alerts/saveLimit . Prod: —»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Для Prod не указан URL или явно указано его отсутствие, но не объяснено поведение: метод недоступен, отключён или другое.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что означает &#39;Prod: —&#39;: метод недоступен, отключён или требуется иной путь.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r34  часть b. rest api / логика работы метода 1. проверить пользовательскую сессию. ">
+  <summary>
+    <span class="rid">R34</span>
+    <span class="q">1. Проверить пользовательскую сессию.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Логика работы метода · стр. 3, строка 206</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r35  часть b. rest api / логика работы метода 2. проверить принадлежность карты клиенту. ">
+  <summary>
+    <span class="rid">R35</span>
+    <span class="q">2. Проверить принадлежность карты клиенту.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Логика работы метода · стр. 3, строка 207</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r36  часть b. rest api / логика работы метода 3. проверить сумму и переключатель. неясно, что за сумма и переключатель: какие поля, какие значения считаются корректными, какие проверки выполняются.">
+  <summary>
+    <span class="rid">R36</span>
+    <span class="q">3. Проверить сумму и переключатель.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Логика работы метода · стр. 3, строка 208</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r36 3. проверить сумму и переключатель. неясно, что за сумма и переключатель: какие поля, какие значения считаются корректными, какие проверки выполняются. уточнить, какие именно сумма и переключатель проверяются, их допустимые значения и критерии проверки.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 3, строка 208</span>
+    </div>
+    <blockquote>«3. Проверить сумму и переключатель.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Неясно, что за сумма и переключатель: какие поля, какие значения считаются корректными, какие проверки выполняются.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, какие именно сумма и переключатель проверяются, их допустимые значения и критерии проверки.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r37  часть b. rest api / логика работы метода 4. заменить настройку и вернуть результат сохранения. не определено, что такое &#39;настройка&#39;, что значит &#39;заменить&#39;, какой результат возвращается и в каком формате.">
+  <summary>
+    <span class="rid">R37</span>
+    <span class="q">4. Заменить настройку и вернуть результат сохранения.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Логика работы метода · стр. 3, строка 209</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r37 4. заменить настройку и вернуть результат сохранения. не определено, что такое &#39;настройка&#39;, что значит &#39;заменить&#39;, какой результат возвращается и в каком формате. уточнить, какая настройка заменяется, что считается успешным сохранением и какой результат возвращается (формат, значения).">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 3, строка 209</span>
+    </div>
+    <blockquote>«4. Заменить настройку и вернуть результат сохранения.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не определено, что такое &#39;настройка&#39;, что значит &#39;заменить&#39;, какой результат возвращается и в каком формате.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, какая настройка заменяется, что считается успешным сохранением и какой результат возвращается (формат, значения).</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r38  часть b. rest api / логика работы метода 5. при отклонении суммы вернуть прежнее состояние и результат error. не определено, что считается &#39;отклонением суммы&#39;, как определяется прежнее состояние, какой формат и код результата error.">
+  <summary>
+    <span class="rid">R38</span>
+    <span class="q">5. При отклонении суммы вернуть прежнее состояние и результат ERROR.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Логика работы метода · стр. 3, строка 210</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r38 5. при отклонении суммы вернуть прежнее состояние и результат error. не определено, что считается &#39;отклонением суммы&#39;, как определяется прежнее состояние, какой формат и код результата error. уточнить, при каких условиях сумма отклоняется, как восстанавливается прежнее состояние и какой формат/код возвращается при ошибке.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 3, строка 210</span>
+    </div>
+    <blockquote>«5. При отклонении суммы вернуть прежнее состояние и результат ERROR.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не определено, что считается &#39;отклонением суммы&#39;, как определяется прежнее состояние, какой формат и код результата ERROR.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, при каких условиях сумма отклоняется, как восстанавливается прежнее состояние и какой формат/код возвращается при ошибке.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="minor" data-crits="complete"
+  data-text="r39 особое правило 1 часть b. rest api / особые правила целое число тенге, обе границы включены. не указано, к какому параметру относится ограничение и каковы конкретные границы (значения).">
+  <summary>
+    <span class="rid">R39 <span class="sub">· Особое правило 1</span></span>
+    <span class="q">Целое число тенге, обе границы включены.</span>
+    <span class="badges">
+<span class="badge sev-minor">незначительный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Особые правила · стр. 4, строка 212</span></div>
+  <div class="finding" data-sev="minor" data-crit="complete" data-text="r39 целое число тенге, обе границы включены. не указано, к какому параметру относится ограничение и каковы конкретные границы (значения). указать, к какому параметру относится ограничение и явно перечислить минимальное и максимальное значения.">
+    <div class="head">
+      <span class="badge sev-minor">незначительный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 4, строка 212</span>
+    </div>
+    <blockquote>«Целое число тенге, обе границы включены.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, к какому параметру относится ограничение и каковы конкретные границы (значения).</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Указать, к какому параметру относится ограничение и явно перечислить минимальное и максимальное значения.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r40 особое правило 2 часть b. rest api / особые правила повторное сохранение заменяет действующую настройку. ">
+  <summary>
+    <span class="rid">R40 <span class="sub">· Особое правило 2</span></span>
+    <span class="q">Повторное сохранение заменяет действующую настройку.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Особые правила · стр. 4, строка 213</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r41 особое правило 3 часть b. rest api / особые правила изменение порога сохраняет накопленные расходы. не описано, что происходит с расходами, если порог изменяется несколько раз подряд, и как это влияет на уведомления или расчёт достижения порога.">
+  <summary>
+    <span class="rid">R41 <span class="sub">· Особое правило 3</span></span>
+    <span class="q">Изменение порога сохраняет накопленные расходы.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Особые правила · стр. 4, строка 214</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r41 изменение порога сохраняет накопленные расходы. не описано, что происходит с расходами, если порог изменяется несколько раз подряд, и как это влияет на уведомления или расчёт достижения порога. уточнить, как ведутся накопленные расходы при повторных изменениях порога и как это влияет на логику уведомлений.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 4, строка 214</span>
+    </div>
+    <blockquote>«Изменение порога сохраняет накопленные расходы.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не описано, что происходит с расходами, если порог изменяется несколько раз подряд, и как это влияет на уведомления или расчёт достижения порога.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, как ведутся накопленные расходы при повторных изменениях порога и как это влияет на логику уведомлений.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r42  часть b. rest api / схема приложение → alertscontroller → хранилище настроек → alertscontroller → приложение. ">
+  <summary>
+    <span class="rid">R42</span>
+    <span class="q">Приложение → AlertsController → хранилище настроек → AlertsController → приложение.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Схема · стр. 4, строка 216</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r43  часть b. rest api / параметры запроса cardid string 1–64 да карта клиента идентификатор карты card_id не указано, какой формат идентификатора карты (цифры, буквы, uuid), допускаются ли спецсимволы, чувствительность к регистру.">
+  <summary>
+    <span class="rid">R43</span>
+    <span class="q">cardId string 1–64 Да Карта клиента Идентификатор карты card_id</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Параметры запроса · стр. 4, строка 228</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r43 cardid string 1–64 да карта клиента идентификатор карты card_id не указано, какой формат идентификатора карты (цифры, буквы, uuid), допускаются ли спецсимволы, чувствительность к регистру. указать допустимый формат cardid (например, только цифры, uuid, чувствительность к регистру).">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 4, строка 228</span>
+    </div>
+    <blockquote>«cardId string 1–64 Да Карта клиента Идентификатор карты card_id»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, какой формат идентификатора карты (цифры, буквы, UUID), допускаются ли спецсимволы, чувствительность к регистру.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Указать допустимый формат cardId (например, только цифры, UUID, чувствительность к регистру).</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r44  часть b. rest api / параметры запроса amount integer 32 bit да 1 000–1 000 000 порог в тенге limit_kzt не указано, что amount должен быть кратен 1 (целое число), и не описано поведение при выходе за пределы диапазона.">
+  <summary>
+    <span class="rid">R44</span>
+    <span class="q">amount integer 32 bit Да 1 000–1 000 000 Порог в тенге limit_kzt</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Параметры запроса · стр. 4, строка 235</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r44 amount integer 32 bit да 1 000–1 000 000 порог в тенге limit_kzt не указано, что amount должен быть кратен 1 (целое число), и не описано поведение при выходе за пределы диапазона. уточнить, что amount — целое число в диапазоне 1 000–1 000 000 включительно; описать ошибку при недопустимом значении.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 4, строка 235</span>
+    </div>
+    <blockquote>«amount integer 32 bit Да 1 000–1 000 000 Порог в тенге limit_kzt»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, что amount должен быть кратен 1 (целое число), и не описано поведение при выходе за пределы диапазона.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, что amount — целое число в диапазоне 1 000–1 000 000 включительно; описать ошибку при недопустимом значении.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r45  часть b. rest api / параметры запроса enabled integer 1 знак да 0 или 1 признак включения enabled не указано, что означает 0 и что означает 1 (включено/выключено), и не описано поведение при других значениях.">
+  <summary>
+    <span class="rid">R45</span>
+    <span class="q">enabled integer 1 знак Да 0 или 1 Признак включения enabled</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Параметры запроса · стр. 4, строка 243</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r45 enabled integer 1 знак да 0 или 1 признак включения enabled не указано, что означает 0 и что означает 1 (включено/выключено), и не описано поведение при других значениях. явно указать: 0 — выключено, 1 — включено; описать ошибку при других значениях.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 4, строка 243</span>
+    </div>
+    <blockquote>«enabled integer 1 знак Да 0 или 1 Признак включения enabled»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, что означает 0 и что означает 1 (включено/выключено), и не описано поведение при других значениях.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Явно указать: 0 — выключено, 1 — включено; описать ошибку при других значениях.</span></div>    <details class="related"><summary>Связанные замечания к этому же месту: 1</summary>
+      <ul><li><span class="badge sev-major">существенный</span> <b>Однозначность</b> — Не указано, что означает каждое значение: «0» — выключено, «1» — включено, что может привести к разночтениям при реализации. <span class="sub">→ enabled string: «0» — уведомление выключено, «1» — уведомление включено.</span></li></ul>
+    </details>
+  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r46  часть b. rest api / параметры запроса content-type: application/json . ">
+  <summary>
+    <span class="rid">R46</span>
+    <span class="q">Content-Type: application/json .</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Параметры запроса · стр. 4, строка 251</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r47  часть b. rest api / параметры запроса тело не используется. ">
+  <summary>
+    <span class="rid">R47</span>
+    <span class="q">Тело не используется.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Параметры запроса · стр. 4, строка 252</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r48  часть b. rest api / ответ если результат 200 или 201 — успешный. если результат 400, 401 и далее — неуспешный. не определено, какие коды ответа используются в каких случаях, и что значит &#39;и далее&#39; — неясно, какие коды считаются ошибкой.">
+  <summary>
+    <span class="rid">R48</span>
+    <span class="q">Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Ответ · стр. 4, строка 254</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r48 если результат 200 или 201 — успешный. если результат 400, 401 и далее — неуспешный. не определено, какие коды ответа используются в каких случаях, и что значит &#39;и далее&#39; — неясно, какие коды считаются ошибкой. перечислить все возможные коды ответа и их значения; явно указать, какие коды считаются ошибкой.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 4, строка 254</span>
+    </div>
+    <blockquote>«Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не определено, какие коды ответа используются в каких случаях, и что значит &#39;и далее&#39; — неясно, какие коды считаются ошибкой.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Перечислить все возможные коды ответа и их значения; явно указать, какие коды считаются ошибкой.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r49  часть b. rest api / ответ result string ok / error исход сохранения — не описано, при каких условиях возвращается ok или error, и возможны ли другие значения.">
+  <summary>
+    <span class="rid">R49</span>
+    <span class="q">result string OK / ERROR Исход сохранения —</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Ответ · стр. 4, строка 260</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r49 result string ok / error исход сохранения — не описано, при каких условиях возвращается ok или error, и возможны ли другие значения. уточнить условия возврата ok и error; явно указать, что других значений быть не может.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 4, строка 260</span>
+    </div>
+    <blockquote>«result string OK / ERROR Исход сохранения —»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не описано, при каких условиях возвращается OK или ERROR, и возможны ли другие значения.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить условия возврата OK и ERROR; явно указать, что других значений быть не может.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r50  часть b. rest api / ответ amount string при успехе порог в тенге limit_kzt не указано, в каком формате возвращается amount (строка или число), и в каких случаях поле отсутствует.">
+  <summary>
+    <span class="rid">R50</span>
+    <span class="q">amount string При успехе Порог в тенге limit_kzt</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Ответ · стр. 4, строка 265</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r50 amount string при успехе порог в тенге limit_kzt не указано, в каком формате возвращается amount (строка или число), и в каких случаях поле отсутствует. уточнить тип поля amount (строка или число), формат значения и условия отсутствия поля.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 4, строка 265</span>
+    </div>
+    <blockquote>«amount string При успехе Порог в тенге limit_kzt»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, в каком формате возвращается amount (строка или число), и в каких случаях поле отсутствует.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить тип поля amount (строка или число), формат значения и условия отсутствия поля.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r51  часть b. rest api / ответ enabled string «0» или «1» признак включения enabled ">
+  <summary>
+    <span class="rid">R51</span>
+    <span class="q">enabled string «0» или «1» Признак включения enabled</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Ответ · стр. 4, строка 270</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r52  часть b. rest api / ответ message string при ошибке описание ошибки — не указано, возвращается ли поле message всегда или только при ошибке, и может ли быть пустым; не описан формат и ограничения длины.">
+  <summary>
+    <span class="rid">R52</span>
+    <span class="q">message string При ошибке Описание ошибки —</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Ответ · стр. 4, строка 276</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r52 message string при ошибке описание ошибки — не указано, возвращается ли поле message всегда или только при ошибке, и может ли быть пустым; не описан формат и ограничения длины. message string: обязательное поле при ошибке, содержит текстовое описание причины ошибки, не более 256 символов.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 4, строка 276</span>
+    </div>
+    <blockquote>«message string При ошибке Описание ошибки —»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, возвращается ли поле message всегда или только при ошибке, и может ли быть пустым; не описан формат и ограничения длины.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">message string: обязательное поле при ошибке, содержит текстовое описание причины ошибки, не более 256 символов.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r53 статус 200 часть b. rest api / статусы 200. ответ в случае успешного выполнения метода. не описан формат успешного ответа, отсутствует структура возвращаемых данных и обязательные поля.">
+  <summary>
+    <span class="rid">R53 <span class="sub">· Статус 200</span></span>
+    <span class="q">200. Ответ в случае успешного выполнения метода.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 4, строка 282</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r53 200. ответ в случае успешного выполнения метода. не описан формат успешного ответа, отсутствует структура возвращаемых данных и обязательные поля. 200. ответ содержит json-объект с полями result, amount, enabled; см. пример ниже.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 4, строка 282</span>
+    </div>
+    <blockquote>«200. Ответ в случае успешного выполнения метода.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не описан формат успешного ответа, отсутствует структура возвращаемых данных и обязательные поля.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">200. Ответ содержит JSON-объект с полями result, amount, enabled; см. пример ниже.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r54 статус 400 часть b. rest api / статусы 400. ответ в случае, если параметры запроса заполнены неверно. ">
+  <summary>
+    <span class="rid">R54 <span class="sub">· Статус 400</span></span>
+    <span class="q">400. Ответ в случае, если параметры запроса заполнены неверно.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 4, строка 283</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="conforming"
+  data-text="r55 статус 200 часть b. rest api / статусы 200. successful — created {&#34;result&#34;:&#34;ok&#34;,&#34;amount&#34;:&#34;50000&#34;,&#34;enabled&#34;:&#34;1&#34;} или {&#34;result&#34;:&#34;error&#34;,&#34;message&#34;:&#34;проверьте сумму&#34;} возврат ошибки с result: &#34;error&#34; и сообщением при статусе 200 не соответствует rest-подходу, где ошибки должны возвращаться с 4xx/5xx.">
+  <summary>
+    <span class="rid">R55 <span class="sub">· Статус 200</span></span>
+    <span class="q">200. Successful — Created {&#34;result&#34;:&#34;OK&#34;,&#34;amount&#34;:&#34;50000&#34;,&#34;enabled&#34;:&#34;1&#34;} или {&#34;result&#34;:&#34;ERROR&#34;,&#34;message&#34;:&#34;Проверьте сумму&#34;}</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 4, строка 284</span></div>
+  <div class="finding" data-sev="major" data-crit="conforming" data-text="r55 200. successful — created {&#34;result&#34;:&#34;ok&#34;,&#34;amount&#34;:&#34;50000&#34;,&#34;enabled&#34;:&#34;1&#34;} или {&#34;result&#34;:&#34;error&#34;,&#34;message&#34;:&#34;проверьте сумму&#34;} возврат ошибки с result: &#34;error&#34; и сообщением при статусе 200 не соответствует rest-подходу, где ошибки должны возвращаться с 4xx/5xx. ошибки должны возвращаться только с соответствующими статусами 4xx/5xx, успешный ответ — только с 200.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Соответствие шаблону/стандарту</span>
+      <span class="loc">стр. 4, строка 284</span>
+    </div>
+    <blockquote>«200. Successful — Created {&#34;result&#34;:&#34;OK&#34;,&#34;amount&#34;:&#34;50000&#34;,&#34;enabled&#34;:&#34;1&#34;} или {&#34;result&#34;:&#34;ERROR&#34;,&#34;message&#34;:&#34;Проверьте сумму&#34;}»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Возврат ошибки с result: &#34;ERROR&#34; и сообщением при статусе 200 не соответствует REST-подходу, где ошибки должны возвращаться с 4xx/5xx.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Ошибки должны возвращаться только с соответствующими статусами 4xx/5xx, успешный ответ — только с 200.</span></div>    <details class="related"><summary>Связанные замечания к этому же месту: 1</summary>
+      <ul><li><span class="badge sev-minor">незначительный</span> <b>Единичность</b> — В одном статусе описаны два разных результата: успешный и ошибочный, что затрудняет тестирование и обработку. <span class="sub">→ Разделить описание успешного и ошибочного ответа на отдельные статусы или явно указать, что оба варианта возможны при 200.</span></li></ul>
+    </details>
+  </div>
+  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r56 статус 401 часть b. rest api / статусы 401. ответ в случае, если запрос выполнен без необходимой авторизации. ">
+  <summary>
+    <span class="rid">R56 <span class="sub">· Статус 401</span></span>
+    <span class="q">401. Ответ в случае, если запрос выполнен без необходимой авторизации.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 4, строка 288</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r57 статус 403 часть b. rest api / статусы 403. ответ в случае, если на указанный ресурс доступ запрещен. ">
+  <summary>
+    <span class="rid">R57 <span class="sub">· Статус 403</span></span>
+    <span class="q">403. Ответ в случае, если на указанный ресурс доступ запрещен.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 4, строка 289</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r58 статус 500 часть b. rest api / статусы 500. ответ в случае, если произошла внутренняя ошибка сервера. ">
+  <summary>
+    <span class="rid">R58 <span class="sub">· Статус 500</span></span>
+    <span class="q">500. Ответ в случае, если произошла внутренняя ошибка сервера.</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 4, строка 290</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r59 статус 400 часть b. rest api / статусы 400. unsuccessful — bad request {&#34;message&#34;:&#34;некорректный запрос&#34;} ">
+  <summary>
+    <span class="rid">R59 <span class="sub">· Статус 400</span></span>
+    <span class="q">400. Unsuccessful — Bad request {&#34;message&#34;:&#34;Некорректный запрос&#34;}</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 4, строка 291</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="0" data-sevs="" data-crits=""
+  data-text="r60 статус 401 часть b. rest api / статусы 401. unsuccessful — unauthorized {&#34;message&#34;:&#34;требуется вход&#34;} ">
+  <summary>
+    <span class="rid">R60 <span class="sub">· Статус 401</span></span>
+    <span class="q">401. Unsuccessful — Unauthorized {&#34;message&#34;:&#34;Требуется вход&#34;}</span>
+    <span class="badges">
+<span class="badge" style="color:var(--ok)">ок</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 5, строка 293</span></div>
+<div class="clean">Нарушений не найдено.</div>  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="complete"
+  data-text="r61 статус 403 часть b. rest api / статусы 403. unsuccessful — forbidden не указано, в каких конкретно случаях возвращается статус 403, какие условия должны быть нарушены для его возврата, и какое тело ответа возвращается.">
+  <summary>
+    <span class="rid">R61 <span class="sub">· Статус 403</span></span>
+    <span class="q">403. Unsuccessful — Forbidden</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 5, строка 295</span></div>
+  <div class="finding" data-sev="major" data-crit="complete" data-text="r61 403. unsuccessful — forbidden не указано, в каких конкретно случаях возвращается статус 403, какие условия должны быть нарушены для его возврата, и какое тело ответа возвращается. указать, при каких условиях возвращается 403 и привести пример тела ответа.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 5, строка 295</span>
+    </div>
+    <blockquote>«403. Unsuccessful — Forbidden»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, в каких конкретно случаях возвращается статус 403, какие условия должны быть нарушены для его возврата, и какое тело ответа возвращается.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Указать, при каких условиях возвращается 403 и привести пример тела ответа.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="major" data-crits="unambiguous"
+  data-text="r62  часть b. rest api / статусы для чужой карты возвращается 404, как и для отсутствующей карты. не определено, что считается &#39;чужой картой&#39; (по какому признаку определяется принадлежность), и неясно, как отличить отсутствие карты от чужой карты по ответу.">
+  <summary>
+    <span class="rid">R62</span>
+    <span class="q">Для чужой карты возвращается 404, как и для отсутствующей карты.</span>
+    <span class="badges">
+<span class="badge sev-major">существенный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 5, строка 296</span></div>
+  <div class="finding" data-sev="major" data-crit="unambiguous" data-text="r62 для чужой карты возвращается 404, как и для отсутствующей карты. не определено, что считается &#39;чужой картой&#39; (по какому признаку определяется принадлежность), и неясно, как отличить отсутствие карты от чужой карты по ответу. явно указать критерий &#39;чужой карты&#39; и описать, как отличить отсутствие карты от чужой карты в ответе.">
+    <div class="head">
+      <span class="badge sev-major">существенный</span>
+      <span class="crit-name">Однозначность</span>
+      <span class="loc">стр. 5, строка 296</span>
+    </div>
+    <blockquote>«Для чужой карты возвращается 404, как и для отсутствующей карты.»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не определено, что считается &#39;чужой картой&#39; (по какому признаку определяется принадлежность), и неясно, как отличить отсутствие карты от чужой карты по ответу.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Явно указать критерий &#39;чужой карты&#39; и описать, как отличить отсутствие карты от чужой карты в ответе.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="minor" data-crits="complete"
+  data-text="r63 статус 404 часть b. rest api / статусы 404 {&#34;message&#34;:&#34;карта не найдена&#34;} не указано, возвращается ли одинаковое сообщение для чужой и отсутствующей карты, и требуется ли локализация сообщения.">
+  <summary>
+    <span class="rid">R63 <span class="sub">· Статус 404</span></span>
+    <span class="q">404 {&#34;message&#34;:&#34;Карта не найдена&#34;}</span>
+    <span class="badges">
+<span class="badge sev-minor">незначительный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 5, строка 297</span></div>
+  <div class="finding" data-sev="minor" data-crit="complete" data-text="r63 404 {&#34;message&#34;:&#34;карта не найдена&#34;} не указано, возвращается ли одинаковое сообщение для чужой и отсутствующей карты, и требуется ли локализация сообщения. уточнить, одинаково ли сообщение для всех случаев 404 и требуется ли локализация.">
+    <div class="head">
+      <span class="badge sev-minor">незначительный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 5, строка 297</span>
+    </div>
+    <blockquote>«404 {&#34;message&#34;:&#34;Карта не найдена&#34;}»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не указано, возвращается ли одинаковое сообщение для чужой и отсутствующей карты, и требуется ли локализация сообщения.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Уточнить, одинаково ли сообщение для всех случаев 404 и требуется ли локализация.</span></div>  </div>
+  </div>
+</details>
+<details class="card req" data-n="1" data-sevs="minor" data-crits="complete"
+  data-text="r64 статус 500 часть b. rest api / статусы 500. unsuccessful — internal server error {&#34;message&#34;:&#34;ошибка сервиса&#34;} не описаны условия возникновения 500 ошибки и не указано, всегда ли возвращается указанное сообщение или возможны другие варианты.">
+  <summary>
+    <span class="rid">R64 <span class="sub">· Статус 500</span></span>
+    <span class="q">500. Unsuccessful — Internal server error {&#34;message&#34;:&#34;Ошибка сервиса&#34;}</span>
+    <span class="badges">
+<span class="badge sev-minor">незначительный</span><span class="badge chip">1</span>    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">Часть B. REST API / Статусы · стр. 5, строка 299</span></div>
+  <div class="finding" data-sev="minor" data-crit="complete" data-text="r64 500. unsuccessful — internal server error {&#34;message&#34;:&#34;ошибка сервиса&#34;} не описаны условия возникновения 500 ошибки и не указано, всегда ли возвращается указанное сообщение или возможны другие варианты. указать условия возврата 500 и возможные варианты сообщения.">
+    <div class="head">
+      <span class="badge sev-minor">незначительный</span>
+      <span class="crit-name">Полнота</span>
+      <span class="loc">стр. 5, строка 299</span>
+    </div>
+    <blockquote>«500. Unsuccessful — Internal server error {&#34;message&#34;:&#34;Ошибка сервиса&#34;}»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>Не описаны условия возникновения 500 ошибки и не указано, всегда ли возвращается указанное сообщение или возможны другие варианты.</span></div>
+<div class="row fix"><span class="k">Исправить</span><span class="v">Указать условия возврата 500 и возможные варианты сообщения.</span></div>  </div>
+  </div>
+</details>
+<div class="card empty hidden" id="none">Ничего не найдено — измените фильтры.</div>
+</div>
+
+<h2 id="split">Как агент нарезал документ на требования</h2>
+<p class="sub">ID R01… присвоены агентом. «Место» — позиция цитаты в исходном документе.</p>
+<div class="card tbl">
+<table>
+  <thead><tr><th>ID</th><th>ID в документе</th><th>Раздел</th><th>Цитата</th><th>Место</th></tr></thead>
+  <tbody><tr><td><a href="#" data-goto="R01">R01</a></td><td>—</td><td>Часть A. Новый функционал / Цели</td><td>Дать клиенту возможность узнать о достижении личного бюджета в момент покупки.</td><td class="loc">стр. 1, строка 25</td></tr><tr><td><a href="#" data-goto="R02">R02</a></td><td>—</td><td>Часть A. Новый функционал / Архитектура решения</td><td>Мобильное приложение → сервис настроек.</td><td class="loc">стр. 1, строка 27</td></tr><tr><td><a href="#" data-goto="R03">R03</a></td><td>—</td><td>Часть A. Новый функционал / Архитектура решения</td><td>Карточный процессинг → учёт расходов → сервис push.</td><td class="loc">стр. 1, строка 27</td></tr><tr><td><a href="#" data-goto="R04">R04</a></td><td>—</td><td>Часть A. Новый функционал / Дизайн процесса UI</td><td>Карты → Расходы → Уведомления.</td><td class="loc">стр. 1, строка 29</td></tr><tr><td><a href="#" data-goto="R05">R05</a></td><td>—</td><td>Часть A. Новый функционал / Дизайн процесса UI</td><td>На экране видны переключатель, поле «Порог, ₸», сумма за месяц и кнопка «Сохранить».</td><td class="loc">стр. 1, строка 29</td></tr><tr><td><a href="#" data-goto="R06">R06</a></td><td>—</td><td>Часть A. Новый функционал / Дизайн процесса UI</td><td>При ошибке ввода сообщение появляется под полем.</td><td class="loc">стр. 1, строка 30</td></tr><tr><td><a href="#" data-goto="R07">R07</a></td><td>—</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.</td><td class="loc">стр. 1, строка 33</td></tr><tr><td><a href="#" data-goto="R08">R08</a></td><td>Ф-1</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно.</td><td class="loc">стр. 1, строка 36</td></tr><tr><td><a href="#" data-goto="R09">R09</a></td><td>Ф-1</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>По умолчанию уведомление выключено.</td><td class="loc">стр. 1, строка 36</td></tr><tr><td><a href="#" data-goto="R10">R10</a></td><td>Ф-2</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>Месяц определяется по дате совершения покупки в Алматы.</td><td class="loc">стр. 1, строка 38</td></tr><tr><td><a href="#" data-goto="R11">R11</a></td><td>Ф-2</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>В расходы входят проведённые покупки.</td><td class="loc">стр. 1, строка 38</td></tr><tr><td><a href="#" data-goto="R12">R12</a></td><td>Ф-2</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>Возврат уменьшает расходы месяца исходной покупки.</td><td class="loc">стр. 1, строка 39</td></tr><tr><td><a href="#" data-goto="R13">R13</a></td><td>Ф-2</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>Переводы и снятие наличных исключаются.</td><td class="loc">стр. 1, строка 39</td></tr><tr><td><a href="#" data-goto="R14">R14</a></td><td>Ф-3</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push.</td><td class="loc">стр. 1, строка 41</td></tr><tr><td><a href="#" data-goto="R15">R15</a></td><td>Ф-3</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>На карту приходится максимум один такой push за календарный месяц.</td><td class="loc">стр. 1, строка 42</td></tr><tr><td><a href="#" data-goto="R16">R16</a></td><td>Ф-4</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>При изменении порога накопленная сумма сохраняется.</td><td class="loc">стр. 1, строка 43</td></tr><tr><td><a href="#" data-goto="R17">R17</a></td><td>Ф-4</td><td>Часть A. Новый функционал / Требования к изменениям</td><td>Если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки.</td><td class="loc">стр. 1, строка 43</td></tr><tr><td><a href="#" data-goto="R18">R18</a></td><td>—</td><td>Часть A. Новый функционал / Sequence Diagram</td><td>Процессинг → сервис расходов: проведена покупка.</td><td class="loc">стр. 1, строка 46</td></tr><tr><td><a href="#" data-goto="R19">R19</a></td><td>—</td><td>Часть A. Новый функционал / Sequence Diagram</td><td>Сервис расходов → настройки: получить порог карты.</td><td class="loc">стр. 1, строка 46</td></tr><tr><td><a href="#" data-goto="R20">R20</a></td><td>—</td><td>Часть A. Новый функционал / Sequence Diagram</td><td>Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.</td><td class="loc">стр. 1, строка 47</td></tr><tr><td><a href="#" data-goto="R21">R21</a></td><td>—</td><td>Часть A. Новый функционал / Нефункциональные требования</td><td>Сервис передаёт push на отправку в течение минуты после получения события.</td><td class="loc">стр. 2, строка 50</td></tr><tr><td><a href="#" data-goto="R22">R22</a></td><td>—</td><td>Часть A. Новый функционал / Требования к данным</td><td>Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.</td><td class="loc">стр. 2, строка 52</td></tr><tr><td><a href="#" data-goto="R23">R23</a></td><td>—</td><td>Часть A. Новый функционал / Требования к интеграции</td><td>Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API».</td><td class="loc">стр. 2, строка 55</td></tr><tr><td><a href="#" data-goto="R24">R24</a></td><td>—</td><td>Часть A. Новый функционал / Требования к интеграции</td><td>Повторная доставка одного события процессинга сохраняет исходный итог.</td><td class="loc">стр. 2, строка 56</td></tr><tr><td><a href="#" data-goto="R25">R25</a></td><td>—</td><td>Часть A. Новый функционал / Критерии приемки</td><td>Расходы 48 500 ₸, порог 50 000 ₸ Провести покупку на 1 500 ₸ Итог 50 000 ₸ и один push</td><td class="loc">стр. 2, строка 64</td></tr><tr><td><a href="#" data-goto="R26">R26</a></td><td>—</td><td>Часть A. Новый функционал / Критерии приемки</td><td>Покупка 31 января в 23:58 на 4 000 ₸ Провести 1 февраля в 00:03 по Алматы Февральский счётчик вырос на 4 000 ₸</td><td class="loc">стр. 2, строка 68</td></tr><tr><td><a href="#" data-goto="R27">R27</a></td><td>—</td><td>Часть A. Новый функционал / Критерии приемки</td><td>Расходы 19 900 ₸, порог 20 000 ₸ Перевести 500 ₸ Счётчик показывает 19 900 ₸</td><td class="loc">стр. 2, строка 74</td></tr><tr><td><a href="#" data-goto="R28">R28</a></td><td>—</td><td>Часть B. REST API / Общие параметры</td><td>Description Сохранение порога. Функциональные требования: чтение порога</td><td class="loc">стр. 3, строка 179</td></tr><tr><td><a href="#" data-goto="R29">R29</a></td><td>—</td><td>Часть B. REST API / Общие параметры</td><td>REST type GET</td><td class="loc">стр. 3, строка 181</td></tr><tr><td><a href="#" data-goto="R30">R30</a></td><td>—</td><td>Часть B. REST API / Общие параметры</td><td>Authorization Bearer, сессия владельца карты</td><td class="loc">стр. 3, строка 183</td></tr><tr><td><a href="#" data-goto="R31">R31</a></td><td>—</td><td>Часть B. REST API / Общие параметры</td><td>Controller AlertsController</td><td class="loc">стр. 3, строка 185</td></tr><tr><td><a href="#" data-goto="R32">R32</a></td><td>—</td><td>Часть B. REST API / Общие параметры</td><td>URL type Dev / Prod</td><td class="loc">стр. 3, строка 187</td></tr><tr><td><a href="#" data-goto="R33">R33</a></td><td>—</td><td>Часть B. REST API / Общие параметры</td><td>Request URL Dev: /alerts/saveLimit . Prod: —</td><td class="loc">стр. 3, строка 189</td></tr><tr><td><a href="#" data-goto="R34">R34</a></td><td>—</td><td>Часть B. REST API / Логика работы метода</td><td>1. Проверить пользовательскую сессию.</td><td class="loc">стр. 3, строка 206</td></tr><tr><td><a href="#" data-goto="R35">R35</a></td><td>—</td><td>Часть B. REST API / Логика работы метода</td><td>2. Проверить принадлежность карты клиенту.</td><td class="loc">стр. 3, строка 207</td></tr><tr><td><a href="#" data-goto="R36">R36</a></td><td>—</td><td>Часть B. REST API / Логика работы метода</td><td>3. Проверить сумму и переключатель.</td><td class="loc">стр. 3, строка 208</td></tr><tr><td><a href="#" data-goto="R37">R37</a></td><td>—</td><td>Часть B. REST API / Логика работы метода</td><td>4. Заменить настройку и вернуть результат сохранения.</td><td class="loc">стр. 3, строка 209</td></tr><tr><td><a href="#" data-goto="R38">R38</a></td><td>—</td><td>Часть B. REST API / Логика работы метода</td><td>5. При отклонении суммы вернуть прежнее состояние и результат ERROR.</td><td class="loc">стр. 3, строка 210</td></tr><tr><td><a href="#" data-goto="R39">R39</a></td><td>Особое правило 1</td><td>Часть B. REST API / Особые правила</td><td>Целое число тенге, обе границы включены.</td><td class="loc">стр. 4, строка 212</td></tr><tr><td><a href="#" data-goto="R40">R40</a></td><td>Особое правило 2</td><td>Часть B. REST API / Особые правила</td><td>Повторное сохранение заменяет действующую настройку.</td><td class="loc">стр. 4, строка 213</td></tr><tr><td><a href="#" data-goto="R41">R41</a></td><td>Особое правило 3</td><td>Часть B. REST API / Особые правила</td><td>Изменение порога сохраняет накопленные расходы.</td><td class="loc">стр. 4, строка 214</td></tr><tr><td><a href="#" data-goto="R42">R42</a></td><td>—</td><td>Часть B. REST API / Схема</td><td>Приложение → AlertsController → хранилище настроек → AlertsController → приложение.</td><td class="loc">стр. 4, строка 216</td></tr><tr><td><a href="#" data-goto="R43">R43</a></td><td>—</td><td>Часть B. REST API / Параметры запроса</td><td>cardId string 1–64 Да Карта клиента Идентификатор карты card_id</td><td class="loc">стр. 4, строка 228</td></tr><tr><td><a href="#" data-goto="R44">R44</a></td><td>—</td><td>Часть B. REST API / Параметры запроса</td><td>amount integer 32 bit Да 1 000–1 000 000 Порог в тенге limit_kzt</td><td class="loc">стр. 4, строка 235</td></tr><tr><td><a href="#" data-goto="R45">R45</a></td><td>—</td><td>Часть B. REST API / Параметры запроса</td><td>enabled integer 1 знак Да 0 или 1 Признак включения enabled</td><td class="loc">стр. 4, строка 243</td></tr><tr><td><a href="#" data-goto="R46">R46</a></td><td>—</td><td>Часть B. REST API / Параметры запроса</td><td>Content-Type: application/json .</td><td class="loc">стр. 4, строка 251</td></tr><tr><td><a href="#" data-goto="R47">R47</a></td><td>—</td><td>Часть B. REST API / Параметры запроса</td><td>Тело не используется.</td><td class="loc">стр. 4, строка 252</td></tr><tr><td><a href="#" data-goto="R48">R48</a></td><td>—</td><td>Часть B. REST API / Ответ</td><td>Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.</td><td class="loc">стр. 4, строка 254</td></tr><tr><td><a href="#" data-goto="R49">R49</a></td><td>—</td><td>Часть B. REST API / Ответ</td><td>result string OK / ERROR Исход сохранения —</td><td class="loc">стр. 4, строка 260</td></tr><tr><td><a href="#" data-goto="R50">R50</a></td><td>—</td><td>Часть B. REST API / Ответ</td><td>amount string При успехе Порог в тенге limit_kzt</td><td class="loc">стр. 4, строка 265</td></tr><tr><td><a href="#" data-goto="R51">R51</a></td><td>—</td><td>Часть B. REST API / Ответ</td><td>enabled string «0» или «1» Признак включения enabled</td><td class="loc">стр. 4, строка 270</td></tr><tr><td><a href="#" data-goto="R52">R52</a></td><td>—</td><td>Часть B. REST API / Ответ</td><td>message string При ошибке Описание ошибки —</td><td class="loc">стр. 4, строка 276</td></tr><tr><td><a href="#" data-goto="R53">R53</a></td><td>Статус 200</td><td>Часть B. REST API / Статусы</td><td>200. Ответ в случае успешного выполнения метода.</td><td class="loc">стр. 4, строка 282</td></tr><tr><td><a href="#" data-goto="R54">R54</a></td><td>Статус 400</td><td>Часть B. REST API / Статусы</td><td>400. Ответ в случае, если параметры запроса заполнены неверно.</td><td class="loc">стр. 4, строка 283</td></tr><tr><td><a href="#" data-goto="R55">R55</a></td><td>Статус 200</td><td>Часть B. REST API / Статусы</td><td>200. Successful — Created {&#34;result&#34;:&#34;OK&#34;,&#34;amount&#34;:&#34;50000&#34;,&#34;enabled&#34;:&#34;1&#34;} или {&#34;result&#34;:&#34;ERROR&#34;,&#34;message&#34;:&#34;Проверьте сумму&#34;}</td><td class="loc">стр. 4, строка 284</td></tr><tr><td><a href="#" data-goto="R56">R56</a></td><td>Статус 401</td><td>Часть B. REST API / Статусы</td><td>401. Ответ в случае, если запрос выполнен без необходимой авторизации.</td><td class="loc">стр. 4, строка 288</td></tr><tr><td><a href="#" data-goto="R57">R57</a></td><td>Статус 403</td><td>Часть B. REST API / Статусы</td><td>403. Ответ в случае, если на указанный ресурс доступ запрещен.</td><td class="loc">стр. 4, строка 289</td></tr><tr><td><a href="#" data-goto="R58">R58</a></td><td>Статус 500</td><td>Часть B. REST API / Статусы</td><td>500. Ответ в случае, если произошла внутренняя ошибка сервера.</td><td class="loc">стр. 4, строка 290</td></tr><tr><td><a href="#" data-goto="R59">R59</a></td><td>Статус 400</td><td>Часть B. REST API / Статусы</td><td>400. Unsuccessful — Bad request {&#34;message&#34;:&#34;Некорректный запрос&#34;}</td><td class="loc">стр. 4, строка 291</td></tr><tr><td><a href="#" data-goto="R60">R60</a></td><td>Статус 401</td><td>Часть B. REST API / Статусы</td><td>401. Unsuccessful — Unauthorized {&#34;message&#34;:&#34;Требуется вход&#34;}</td><td class="loc">стр. 5, строка 293</td></tr><tr><td><a href="#" data-goto="R61">R61</a></td><td>Статус 403</td><td>Часть B. REST API / Статусы</td><td>403. Unsuccessful — Forbidden</td><td class="loc">стр. 5, строка 295</td></tr><tr><td><a href="#" data-goto="R62">R62</a></td><td>—</td><td>Часть B. REST API / Статусы</td><td>Для чужой карты возвращается 404, как и для отсутствующей карты.</td><td class="loc">стр. 5, строка 296</td></tr><tr><td><a href="#" data-goto="R63">R63</a></td><td>Статус 404</td><td>Часть B. REST API / Статусы</td><td>404 {&#34;message&#34;:&#34;Карта не найдена&#34;}</td><td class="loc">стр. 5, строка 297</td></tr><tr><td><a href="#" data-goto="R64">R64</a></td><td>Статус 500</td><td>Часть B. REST API / Статусы</td><td>500. Unsuccessful — Internal server error {&#34;message&#34;:&#34;Ошибка сервиса&#34;}</td><td class="loc">стр. 5, строка 299</td></tr></tbody>
+</table>
+</div>
+
+<h2>Паспорт прогона</h2>
+<div class="card" style="padding:14px 16px">
+  <div class="meta">
+    <div>Документ: <b>requirements.pdf</b></div>
+    <div>Дата прогона: <b>2026-11-27 21:58</b></div>
+    <div>Модель: <b>openai:gpt-4.1</b></div>
+    <div>Агент: <b>0.1.0 · 47fda42</b></div>
+    <div>Цитат проверено: <b>58</b>, отброшено: <b>1</b></div>
+  </div>
+  <details class="related" style="margin-top:12px"><summary>Отброшенные цитаты: модель их привела, но в документе их нет</summary>
+    <ul><li>«—»</li></ul></details>
+</div>
+<footer>Сформировано агентом статической проверки требований. Каждая цитата сверена с исходным документом; неподтверждённые замечания в отчёт не попадают.</footer>
+</div>
+<script>
+(function(){
+  var q=document.getElementById('q'),crit=document.getElementById('crit'),bad=document.getElementById('onlybad'),
+      seg=document.getElementById('sev'),cnt=document.getElementById('count'),none=document.getElementById('none'),
+      reqs=[].slice.call(document.querySelectorAll('#reqlist details.req')),sev='';
+  function apply(){
+    var t=q.value.trim().toLowerCase(),c=crit.value,shown=0,filtering=!!(sev||c);
+    reqs.forEach(function(d){
+      var ok=true;
+      if(t&&d.dataset.text.indexOf(t)<0)ok=false;
+      if(ok&&bad.checked&&d.dataset.n==='0')ok=false;
+      var items=[].slice.call(d.querySelectorAll('.req-body>.finding')),vis=0;
+      items.forEach(function(f){var m=(!sev||f.dataset.sev===sev)&&(!c||f.dataset.crit===c);f.classList.toggle('hidden',!m);if(m)vis++;});
+      if(ok&&filtering&&vis===0)ok=false;
+      d.classList.toggle('hidden',!ok);if(ok)shown++;
+      if(ok&&(t||filtering)&&vis)d.open=true;
+    });
+    var sv=0,sets=[].slice.call(document.querySelectorAll('#setlist>.finding'));
+    sets.forEach(function(f){var m=(!sev||f.dataset.sev===sev)&&(!c||f.dataset.crit===c)&&(!t||f.dataset.text.indexOf(t)>=0);f.classList.toggle('hidden',!m);if(m)sv++;});
+    var sn=document.getElementById('setnone');if(sn)sn.classList.toggle('hidden',sv>0);
+    cnt.textContent='Набор: '+sv+' из '+sets.length+' · требования: '+shown+' из '+reqs.length;
+    none.classList.toggle('hidden',shown>0);
+  }
+  seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;sev=b.dataset.v;
+    [].forEach.call(seg.children,function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});apply();});
+  [q,crit,bad].forEach(function(el){el.addEventListener('input',apply);el.addEventListener('change',apply);});
+  var exp=document.getElementById('expand'),opened=false;
+  exp.addEventListener('click',function(){opened=!opened;reqs.forEach(function(d){if(!d.classList.contains('hidden'))d.open=opened;});exp.textContent=opened?'Свернуть все':'Раскрыть все';});
+  document.addEventListener('click',function(e){var a=e.target.closest('[data-goto]');if(!a)return;e.preventDefault();
+    var d=reqs.filter(function(x){return x.querySelector('.rid').textContent.trim().indexOf(a.dataset.goto)===0})[0];
+    if(d){d.classList.remove('hidden');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});}});
+  window.addEventListener('beforeprint',function(){reqs.forEach(function(d){d.open=true;});});
+  apply();
+})();
+</script>
+</body>
+</html>
