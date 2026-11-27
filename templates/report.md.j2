@@ -10,7 +10,8 @@
 | Версия агента | {{ passport.agent_version }} (коммит `{{ passport.commit }}`) |
 | Критерии | ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE Std 830-1998 п. 4.3 |
 | Проверка цитат | проверено {{ stats.quotes_checked }}, отброшено как не найденные в документе: {{ stats.quotes_dropped }} |
-{% if stats.warnings %}
+{% if stats.review_dropped is defined %}| Ревизия замечаний | повторная проверка моделью: отброшено как ложные или придирки — {{ stats.review_dropped }}, критичность пересмотрена |
+{% endif %}{% if stats.warnings %}
 
 **Предупреждения о чтении документа:**
 {% for w in stats.warnings %}
