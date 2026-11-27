@@ -1,4 +1,4 @@
-"""TekserAI — веб-приложение агента проверки требований (интерфейс — web/index.html).
+"""TEKSERLOCK — веб-приложение агента проверки требований (интерфейс — web/index.html).
 
 Запуск:  python app.py            (откроется http://127.0.0.1:8000)
          python app.py --port 8080 --no-browser
@@ -158,7 +158,7 @@ def _new_run(filename: str, data: bytes, no_cache: bool) -> str:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "TekserAI/1.0"
+    server_version = "TEKSERLOCK/1.0"
 
     def log_message(self, fmt: str, *args) -> None:  # тише в консоли
         if args and str(args[1]).startswith(("4", "5")) and "/logo" not in str(args[0]):
@@ -293,7 +293,7 @@ def main() -> int:
     RUNS.mkdir(parents=True, exist_ok=True)
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     url = f"http://{'127.0.0.1' if args.host in ('0.0.0.0', '') else args.host}:{args.port}"
-    print(f"TekserAI — проверка требований: {url}  (модель: {_env_model()}). Остановить — Ctrl+C")
+    print(f"TEKSERLOCK — проверка требований: {url}  (модель: {_env_model()}). Остановить — Ctrl+C")
     if not args.no_browser:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
     try:
