@@ -1,9 +1,9 @@
 {
  "passport": {
   "document": "requirements.md",
-  "date": "2026-11-27 14:13",
+  "date": "2026-11-27 14:23",
   "model": "openai:openai/gpt-oss-120b",
-  "commit": "085fcde",
+  "commit": "d3364f7",
   "agent_version": "0.1.0"
  },
  "requirements": [
@@ -1954,6 +1954,7 @@
   "quotes_dropped": 1,
   "dropped_examples": [
    "Хранить … сумму покупки в тиынах. | Держатель … задаёт порог от 1 000 до 1 000 000 ₸ включительно"
-  ]
+  ],
+  "warnings": []
  }
 }
