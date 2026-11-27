@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отчёт о проверке требований{% if passport %} — {{ passport.document }}{% elif error %} — {{ error.document }}{% endif %}</title>
+<style>
+:root{
+  --bg:#f6f7f9;--surface:#fff;--surface-2:#f1f3f6;--text:#16181d;--muted:#5b6270;--line:#e3e6eb;
+  --crit:#c4271d;--crit-bg:#fdecea;--major:#b86a00;--major-bg:#fff4e0;--minor:#4a5568;--minor-bg:#eef1f5;
+  --ok:#1f7a4d;--ok-bg:#e7f6ee;--accent:#2457d6;--accent-bg:#e9efff;--shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1115;--surface:#171a21;--surface-2:#1e222b;--text:#e8eaef;--muted:#9aa3b2;--line:#2a2f3a;
+  --crit:#ff6b5f;--crit-bg:#3a1714;--major:#ffb547;--major-bg:#36260b;--minor:#a7b0bf;--minor-bg:#232833;
+  --ok:#4fd08f;--ok-bg:#12301f;--accent:#7aa2ff;--accent-bg:#1b2442;--shadow:none;}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 64px}
+header.top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:19px;margin:36px 0 12px;letter-spacing:-.01em}
+h3{font-size:15px;margin:0}
+.sub{color:var(--muted);font-size:14px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2px 18px;font-size:13px;color:var(--muted)}
+.meta b{color:var(--text);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.verdict{padding:18px 20px;border-left:6px solid var(--crit);display:flex;gap:14px;align-items:flex-start}
+.verdict.ready{border-left-color:var(--ok)}
+.verdict .icon{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;background:var(--crit)}
+.verdict.ready .icon{background:var(--ok)}
+.verdict .title{font-size:18px;font-weight:700;margin-bottom:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:14px}
+.kpi{padding:14px 16px}
+.kpi .n{font-size:28px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:13px;color:var(--muted)}
+.kpi.crit .n{color:var(--crit)}.kpi.major .n{color:var(--major)}.kpi.ok .n{color:var(--ok)}
+.bar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-top:14px}
+.bar span{display:block}
+.notice{padding:12px 16px;margin-top:12px;background:var(--major-bg);border-color:transparent;font-size:14px}
+.notice ul{margin:6px 0 0;padding-left:20px}
+ol.fixes{margin:0;padding:6px 20px 6px 40px}
+ol.fixes li{padding:8px 0;border-bottom:1px solid var(--line)}ol.fixes li:last-child{border:0}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.sev-critical{background:var(--crit-bg);color:var(--crit)}.sev-major{background:var(--major-bg);color:var(--major)}.sev-minor{background:var(--minor-bg);color:var(--minor)}
+.chip{background:var(--surface-2);color:var(--muted)}
+.loc{font-size:12px;color:var(--muted);white-space:nowrap}
+.finding{padding:14px 16px;border-top:1px solid var(--line)}
+.finding:first-child{border-top:0}
+.finding .head{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.finding .crit-name{font-weight:600}
+blockquote{margin:0 0 8px;padding:8px 12px;border-left:3px solid var(--line);background:var(--surface-2);border-radius:0 8px 8px 0;font-size:14px}
+.row{display:grid;grid-template-columns:96px 1fr;gap:8px;font-size:14px;margin-top:4px}
+.row .k{color:var(--muted)}
+.fix .v{color:var(--ok)}
+.related{margin-top:10px;padding:8px 12px;border:1px dashed var(--line);border-radius:8px;font-size:13px}
+.related summary{cursor:pointer;color:var(--muted)}
+.related ul{margin:8px 0 0;padding-left:18px}.related li{margin:6px 0}
+.toolbar{position:sticky;top:0;z-index:5;display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 12px;margin:0 0 14px;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(6px)}
+.toolbar input[type=search]{flex:1 1 220px;min-width:180px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit}
+.toolbar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--muted);padding:7px 11px;font:inherit;font-size:13px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--accent-bg);color:var(--accent);font-weight:600}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:7px 11px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer}
+.count{font-size:13px;color:var(--muted);margin-left:auto}
+details.req{margin-bottom:10px}
+details.req>summary{list-style:none;cursor:pointer;padding:12px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+details.req>summary::-webkit-details-marker{display:none}
+details.req>summary .rid{font-weight:700;font-variant-numeric:tabular-nums}
+details.req>summary .q{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.req[open]>summary{border-bottom:1px solid var(--line)}
+details.req[open]>summary .q{white-space:normal}
+.req-body .fullq{padding:12px 16px 0;font-size:14px}
+.clean{padding:12px 16px;color:var(--ok);font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;background:var(--surface-2);position:sticky;top:0}
+.tbl{max-height:520px;overflow:auto;border-radius:12px}
+.set .finding .head .aff{font-size:12px;color:var(--muted)}
+.hidden{display:none!important}
+.empty{padding:16px;color:var(--muted);text-align:center}
+footer{margin-top:40px;font-size:12px;color:var(--muted)}
+.error-box{padding:22px;border-left:6px solid var(--crit)}
+@media (max-width:640px){.row{grid-template-columns:1fr}details.req>summary{grid-template-columns:auto 1fr}details.req>summary .badges{grid-column:1/-1}}
+@media print{
+  body{background:#fff}.toolbar,.no-print{display:none!important}.card{box-shadow:none}
+  details.req{break-inside:avoid}details.req>summary .q{white-space:normal}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+{% if error %}
+<header class="top"><div><h1>Отчёт о проверке требований</h1><div class="sub">{{ error.document }}</div></div></header>
+<section class="card error-box">
+  <h2 style="margin-top:0">Проверка не выполнена</h2>
+  <p><b>Причина:</b> {{ error.reason }}</p>
+  <div class="meta">
+    <div>Этап: <b>{{ error.stage }}</b></div><div>Дата: <b>{{ error.date }}</b></div>
+    <div>Модель: <b>{{ error.model }}</b></div><div>Агент: <b>{{ error.version }}</b></div>
+  </div>
+  <p class="sub">Вывод о готовности документа к разработке не сделан: исправьте причину и запустите прогон снова.</p>
+</section>
+{% else %}
+{% set total = stats.findings or 0 %}
+<header class="top">
+  <div>
+    <h1>Отчёт о проверке требований</h1>
+    <div class="sub">{{ passport.document }} · ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE Std 830-1998 п. 4.3</div>
+  </div>
+  <div class="no-print"><button class="btn" onclick="window.print()">Печать / PDF</button></div>
+</header>
+
+<section class="card verdict{% if verdict.ready %} ready{% endif %}">
+  <div class="icon">{% if verdict.ready %}✓{% else %}!{% endif %}</div>
+  <div>
+    <div class="title">{% if verdict.ready %}Документ можно передавать в разработку и тестирование{% else %}Документ не готов к разработке и тестированию{% endif %}</div>
+    <div>{{ verdict.summary }}</div>
+  </div>
+</section>
+
+<div class="kpis">
+  <div class="card kpi"><div class="n">{{ stats.requirements }}</div><div class="l">требований выделено</div></div>
+  <div class="card kpi"><div class="n">{{ total }}</div><div class="l">нарушений{% if stats.related %} (+{{ stats.related }} связанных){% endif %}</div></div>
+  <div class="card kpi crit"><div class="n">{{ stats.critical }}</div><div class="l">критичных</div></div>
+  <div class="card kpi major"><div class="n">{{ stats.major }}</div><div class="l">существенных</div></div>
+  <div class="card kpi"><div class="n">{{ stats.minor }}</div><div class="l">незначительных</div></div>
+  <div class="card kpi ok"><div class="n">{{ stats.quotes_checked - stats.quotes_dropped }}/{{ stats.quotes_checked }}</div><div class="l">цитат подтверждено в документе</div></div>
+</div>
+{% if total %}
+<div class="bar" title="Распределение по критичности">
+  <span style="width:{{ 100 * stats.critical / total }}%;background:var(--crit)"></span>
+  <span style="width:{{ 100 * stats.major / total }}%;background:var(--major)"></span>
+  <span style="width:{{ 100 * stats.minor / total }}%;background:var(--minor)"></span>
+</div>
+{% endif %}
+
+{% if stats.warnings %}
+<div class="card notice"><b>Предупреждения о чтении документа</b>
+  <ul>{% for w in stats.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+{% if verdict.top_fixes %}
+<h2>Что исправить в первую очередь</h2>
+<div class="card"><ol class="fixes">{% for t in verdict.top_fixes %}<li>{{ t }}</li>{% endfor %}</ol></div>
+{% endif %}
+
+{% if critical %}
+<h2>Критичные дефекты <span class="badge sev-critical">{{ critical | length }}</span></h2>
+<div class="card">
+{% for f in critical %}
+  <div class="finding">
+    <div class="head"><span class="badge sev-critical">критичный</span><span class="crit-name">{{ f.criterion | crit }}</span><span class="badge chip">{{ f.req_id }}</span><span class="loc">{{ f.location }}</span></div>
+    <blockquote>«{{ f.quote }}»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>{{ f.explanation }}</span></div>
+    <div class="row fix"><span class="k">Исправить</span><span class="v">{{ f.fix }}</span></div>
+  </div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% macro finding_block(f, show_req=false) %}
+  <div class="finding" data-sev="{{ f.severity }}" data-crit="{{ f.criterion }}" data-text="{{ (f.req_id ~ ' ' ~ f.quote ~ ' ' ~ f.explanation ~ ' ' ~ f.fix) | lower }}">
+    <div class="head">
+      <span class="badge sev-{{ f.severity }}">{{ f.severity | sev }}</span>
+      <span class="crit-name">{{ f.criterion | crit }}</span>
+      {% if show_req %}<span class="badge chip">{{ f.req_id }}</span>{% endif %}
+      <span class="loc">{{ f.location }}</span>
+    </div>
+    <blockquote>«{{ f.quote }}»</blockquote>
+    <div class="row"><span class="k">Проблема</span><span>{{ f.explanation }}</span></div>
+    {% if f.fix %}<div class="row fix"><span class="k">Исправить</span><span class="v">{{ f.fix }}</span></div>{% endif %}
+    {% if f.related %}
+    <details class="related"><summary>Связанные замечания к этому же месту: {{ f.related | length }}</summary>
+      <ul>{% for x in f.related %}<li><span class="badge sev-{{ x.severity }}">{{ x.severity | sev }}</span> <b>{{ x.criterion | crit }}</b> — {{ x.explanation }}{% if x.fix %} <span class="sub">→ {{ x.fix }}</span>{% endif %}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+<h2 id="findings" style="margin-bottom:8px">Найденные нарушения</h2>
+<div class="card toolbar no-print" role="search">
+  <input type="search" id="q" placeholder="Поиск по тексту, ID, разделу…" aria-label="Поиск">
+  <div class="seg" id="sev" role="group" aria-label="Критичность">
+    <button type="button" data-v="" aria-pressed="true">Все</button>
+    <button type="button" data-v="critical" aria-pressed="false">Критичные</button>
+    <button type="button" data-v="major" aria-pressed="false">Существенные</button>
+    <button type="button" data-v="minor" aria-pressed="false">Незначительные</button>
+  </div>
+  <select id="crit" aria-label="Критерий">
+    <option value="">Все критерии</option>
+    {% for k, v in criterion_ru.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+  </select>
+  <label class="sub"><input type="checkbox" id="onlybad"> только с нарушениями</label>
+  <button type="button" class="btn" id="expand">Раскрыть все</button>
+  <span class="count" id="count"></span>
+</div>
+
+<h2 id="set">Проверка всего набора требований <span class="badge chip">{{ set_findings | length }}</span></h2>
+<p class="sub">Противоречия между требованиями, между частью A и спецификацией API, пропуски и несогласованность терминов.</p>
+{% if set_findings %}
+<div class="card set" id="setlist">{% for f in set_findings %}{{ finding_block(f, true) }}{% endfor %}<div class="empty hidden" id="setnone">Под фильтры ничего не попало.</div></div>
+{% else %}<div class="card empty">Нарушений на уровне набора не найдено.</div>{% endif %}
+
+<h2 id="reqs">Проверка каждого требования</h2>
+
+<div id="reqlist">
+{% for r in requirements %}
+{% set fs = by_req.get(r.id, []) %}
+{% set worst = (fs | map(attribute='severity') | list) %}
+<details class="card req" data-n="{{ fs | length }}" data-sevs="{{ worst | join(' ') }}" data-crits="{{ fs | map(attribute='criterion') | join(' ') }}"
+  data-text="{{ (r.id ~ ' ' ~ (r.doc_id or '') ~ ' ' ~ r.section ~ ' ' ~ r.quote ~ ' ' ~ (fs | map(attribute='explanation') | join(' '))) | lower }}">
+  <summary>
+    <span class="rid">{{ r.id }}{% if r.doc_id %} <span class="sub">· {{ r.doc_id }}</span>{% endif %}</span>
+    <span class="q">{{ r.quote }}</span>
+    <span class="badges">
+      {% if 'critical' in worst %}<span class="badge sev-critical">критичный</span>{% elif 'major' in worst %}<span class="badge sev-major">существенный</span>{% elif 'minor' in worst %}<span class="badge sev-minor">незначительный</span>{% endif %}
+      {% if fs %}<span class="badge chip">{{ fs | length }}</span>{% else %}<span class="badge" style="color:var(--ok)">ок</span>{% endif %}
+    </span>
+  </summary>
+  <div class="req-body">
+    <div class="fullq"><span class="sub">{{ r.section }} · {{ r.location or "место не найдено" }}</span></div>
+    {% if fs %}{% for f in fs %}{{ finding_block(f) }}{% endfor %}
+    {% else %}<div class="clean">Нарушений не найдено.</div>{% endif %}
+  </div>
+</details>
+{% endfor %}
+<div class="card empty hidden" id="none">Ничего не найдено — измените фильтры.</div>
+</div>
+
+<h2 id="split">Как агент нарезал документ на требования</h2>
+<p class="sub">ID R01… присвоены агентом. «Место» — позиция цитаты в исходном документе.</p>
+<div class="card tbl">
+<table>
+  <thead><tr><th>ID</th><th>ID в документе</th><th>Раздел</th><th>Цитата</th><th>Место</th></tr></thead>
+  <tbody>{% for r in requirements %}<tr><td><a href="#" data-goto="{{ r.id }}">{{ r.id }}</a></td><td>{{ r.doc_id or "—" }}</td><td>{{ r.section }}</td><td>{{ r.quote | short(160) }}</td><td class="loc">{{ r.location or "не найдено" }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+
+<h2>Паспорт прогона</h2>
+<div class="card" style="padding:14px 16px">
+  <div class="meta">
+    <div>Документ: <b>{{ passport.document }}</b></div>
+    <div>Дата прогона: <b>{{ passport.date }}</b></div>
+    <div>Модель: <b>{{ passport.model }}</b></div>
+    <div>Агент: <b>{{ passport.agent_version }} · {{ passport.commit }}</b></div>
+    <div>Цитат проверено: <b>{{ stats.quotes_checked }}</b>, отброшено: <b>{{ stats.quotes_dropped }}</b></div>
+  </div>
+  {% if stats.dropped_examples %}
+  <details class="related" style="margin-top:12px"><summary>Отброшенные цитаты: модель их привела, но в документе их нет</summary>
+    <ul>{% for q in stats.dropped_examples %}<li>«{{ q }}»</li>{% endfor %}</ul></details>
+  {% endif %}
+</div>
+{% endif %}
+<footer>Сформировано агентом статической проверки требований. Каждая цитата сверена с исходным документом; неподтверждённые замечания в отчёт не попадают.</footer>
+</div>
+{% if not error %}
+<script>
+(function(){
+  var q=document.getElementById('q'),crit=document.getElementById('crit'),bad=document.getElementById('onlybad'),
+      seg=document.getElementById('sev'),cnt=document.getElementById('count'),none=document.getElementById('none'),
+      reqs=[].slice.call(document.querySelectorAll('#reqlist details.req')),sev='';
+  function apply(){
+    var t=q.value.trim().toLowerCase(),c=crit.value,shown=0,filtering=!!(sev||c);
+    reqs.forEach(function(d){
+      var ok=true;
+      if(t&&d.dataset.text.indexOf(t)<0)ok=false;
+      if(ok&&bad.checked&&d.dataset.n==='0')ok=false;
+      var items=[].slice.call(d.querySelectorAll('.req-body>.finding')),vis=0;
+      items.forEach(function(f){var m=(!sev||f.dataset.sev===sev)&&(!c||f.dataset.crit===c);f.classList.toggle('hidden',!m);if(m)vis++;});
+      if(ok&&filtering&&vis===0)ok=false;
+      d.classList.toggle('hidden',!ok);if(ok)shown++;
+      if(ok&&(t||filtering)&&vis)d.open=true;
+    });
+    var sv=0,sets=[].slice.call(document.querySelectorAll('#setlist>.finding'));
+    sets.forEach(function(f){var m=(!sev||f.dataset.sev===sev)&&(!c||f.dataset.crit===c)&&(!t||f.dataset.text.indexOf(t)>=0);f.classList.toggle('hidden',!m);if(m)sv++;});
+    var sn=document.getElementById('setnone');if(sn)sn.classList.toggle('hidden',sv>0);
+    cnt.textContent='Набор: '+sv+' из '+sets.length+' · требования: '+shown+' из '+reqs.length;
+    none.classList.toggle('hidden',shown>0);
+  }
+  seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;sev=b.dataset.v;
+    [].forEach.call(seg.children,function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});apply();});
+  [q,crit,bad].forEach(function(el){el.addEventListener('input',apply);el.addEventListener('change',apply);});
+  var exp=document.getElementById('expand'),opened=false;
+  exp.addEventListener('click',function(){opened=!opened;reqs.forEach(function(d){if(!d.classList.contains('hidden'))d.open=opened;});exp.textContent=opened?'Свернуть все':'Раскрыть все';});
+  document.addEventListener('click',function(e){var a=e.target.closest('[data-goto]');if(!a)return;e.preventDefault();
+    var d=reqs.filter(function(x){return x.querySelector('.rid').textContent.trim().indexOf(a.dataset.goto)===0})[0];
+    if(d){d.classList.remove('hidden');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});}});
+  window.addEventListener('beforeprint',function(){reqs.forEach(function(d){d.open=true;});});
+  apply();
+})();
+</script>
+{% endif %}
+</body>
+</html>

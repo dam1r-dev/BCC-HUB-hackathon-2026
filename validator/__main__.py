@@ -20,7 +20,7 @@ from . import __version__
 from .ingest import DocumentError, QuoteIndex, load
 from .llm import LLM, LLMError
 from .pipeline import ROOT, PROMPTS, check_requirements, check_set, consolidate, dedupe, extract, make_verdict, rule_checks, verify
-from .report import render, render_error
+from .report import render, render_error, render_error_html, render_html
 from .schema import Passport, Report
 
 
@@ -38,8 +38,9 @@ def _commit() -> str:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="validator", description="Статическая проверка документа требований с помощью LLM")
     ap.add_argument("input", help="путь к документу требований (.pdf, .md, .txt, .docx)")
-    ap.add_argument("output", help="путь к файлу отчёта (.md); рядом ляжет .json")
+    ap.add_argument("output", help="путь к файлу отчёта (.md или .html); рядом ляжет .json")
     ap.add_argument("--no-cache", action="store_true", help="не использовать кэш ответов модели")
+    ap.add_argument("--html", action="store_true", help="дополнительно сохранить наглядный отчёт .html")
     args = ap.parse_args(argv)
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -54,6 +55,9 @@ def main(argv: list[str] | None = None) -> int:
         os.environ["LLM_CACHE"] = "0"
 
     out = Path(args.output)
+    want_html = args.html or out.suffix.lower() == ".html"
+    if out.suffix.lower() == ".html":
+        out = out.with_suffix(".md")  # markdown пишется всегда (его требует формат сдачи), HTML — рядом
     started = datetime.now().strftime("%Y-%m-%d %H:%M")
     model_name = "—"
 
@@ -67,13 +71,17 @@ def main(argv: list[str] | None = None) -> int:
             out.with_suffix(".json").write_text(json.dumps(
                 {"error": {"stage": stage, "reason": reason}, "document": Path(args.input).name, "date": started},
                 ensure_ascii=False, indent=1), encoding="utf-8")
-            print(f"Причина записана в {out}", file=sys.stderr)
+            if want_html:
+                out.with_suffix(".html").write_text(render_error_html(
+                    Path(args.input).name, started, model_name, f"{__version__} ({_commit()})", stage, reason),
+                    encoding="utf-8")
+            print(f"Причина записана в {out}" + (f" и {out.with_suffix('.html')}" if want_html else ""), file=sys.stderr)
         except OSError as e:
             print(f"Отчёт записать не удалось: {e}", file=sys.stderr)
         return code
 
     if out.suffix.lower() != ".md":
-        print(f"Ошибка: файл отчёта должен быть .md, получено «{out.name}»", file=sys.stderr)
+        print(f"Ошибка: файл отчёта должен быть .md или .html, получено «{out.name}»", file=sys.stderr)
         return 2
     try:
         doc = load(args.input)
@@ -138,8 +146,12 @@ def main(argv: list[str] | None = None) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(render(report), encoding="utf-8")
     out.with_suffix(".json").write_text(json.dumps(report.to_dict(), ensure_ascii=False, indent=1), encoding="utf-8")
+    if want_html:
+        out.with_suffix(".html").write_text(render_html(report), encoding="utf-8")
     print(f"Готово: {out} (требований {stats['requirements']}, нарушений {stats['findings']}, "
           f"критичных {stats['critical']}, отброшено неподтверждённых цитат {stats['quotes_dropped']})", file=sys.stderr)
+    if want_html:
+        print(f"Наглядный отчёт: {out.with_suffix('.html')} — откройте в браузере", file=sys.stderr)
     return 0
 
 
