@@ -1,9 +1,9 @@
 {
  "passport": {
   "document": "requirements.md",
-  "date": "2026-11-27 08:17",
+  "date": "2026-11-27 14:13",
   "model": "openai:openai/gpt-oss-120b",
-  "commit": "нет git",
+  "commit": "085fcde",
   "agent_version": "0.1.0"
  },
  "requirements": [
