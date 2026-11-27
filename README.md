@@ -18,6 +18,8 @@
 
 У каждого замечания есть дословная цитата и место в документе (строка, для PDF — страница).
 
+В PDF заголовки разделов определяются по размеру шрифта, поэтому нарезка по разделам работает так же, как для Markdown. Пример PDF: `input/requirements.pdf`.
+
 ## Установка
 
 Нужен Python 3.10+.
@@ -28,15 +30,20 @@ pip install -r requirements.txt
 
 ## Ключ LLM
 
-1. Откройте https://aistudio.google.com/ и нажмите **Get API key**. Хватит бесплатного тарифа.
+1. Откройте https://console.groq.com/keys и нажмите **Create API Key**. Хватит бесплатного тарифа.
 2. Скопируйте пример конфига и вставьте ключ:
    ```bash
    cp .env.example .env        # Windows: copy .env.example .env
    ```
-   В `.env` замените `your_gemini_api_key_here` на свой ключ. Файл `.env` в git не попадает.
+   В `.env` замените `your_groq_key_here` на свой ключ. Файл `.env` в git не попадает.
 
-Модель по умолчанию: **gemini-2.5-flash** (переменная `GEMINI_MODEL`).
-Можно работать с локальной моделью через Ollama: `LLM_PROVIDER=ollama`, `OLLAMA_MODEL=qwen2.5:14b`.
+Модель: **openai/gpt-oss-120b** через Groq (OpenAI-совместимый API, переменные `OPENAI_*`).
+Агент работает и с другими провайдерами, переключение одной переменной `LLM_PROVIDER`:
+- `openai` — любой OpenAI-совместимый API (Groq, OpenRouter, OpenAI);
+- `gemini` — Google Gemini (`GEMINI_API_KEY`, `GEMINI_MODEL`);
+- `ollama` — локальная модель (`OLLAMA_MODEL=qwen2.5:14b`), документ не покидает компьютер.
+
+Бесплатный Groq ограничивает 8000 токенов в минуту: агент сам ждёт, сколько просит API, поэтому полный прогон без кэша занимает около 5 минут.
 
 ## Запуск
 
@@ -50,7 +57,7 @@ python -m validator <путь к документу> <путь к отчёту.m
 python -m validator input/requirements.md reports/report.md
 ```
 
-Отчёт ляжет по указанному пути, рядом — `report.json` с теми же данными. Прогон занимает 1–3 минуты.
+Отчёт ляжет по указанному пути, рядом — `report.json` с теми же данными. Повторный прогон того же документа берёт ответы из кэша и занимает секунды.
 Ответы модели кэшируются в `.cache/`; для чистого прогона добавьте `--no-cache`.
 
 ## Состав отчёта

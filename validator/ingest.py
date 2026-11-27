@@ -23,13 +23,16 @@ def load(path: str | Path) -> Document:
     if ext == ".pdf":
         import pymupdf
 
-        lines: list[str] = []
-        pages: list[int] = []
+        raw: list[tuple[str, float, int]] = []   # текст строки, размер шрифта, страница
         with pymupdf.open(p) as pdf:
             for i, page in enumerate(pdf, start=1):
-                for ln in page.get_text("text").splitlines():
-                    lines.append(ln)
-                    pages.append(i)
+                for block in page.get_text("dict")["blocks"]:
+                    for ln in block.get("lines", []):
+                        spans = [s for s in ln["spans"] if s["text"].strip()]
+                        if spans:
+                            raw.append(("".join(s["text"] for s in ln["spans"]).rstrip(),
+                                        round(max(s["size"] for s in spans), 1), i))
+        lines, pages = _mark_pdf_headings(raw)
         return Document(p.name, "\n".join(lines), lines, pages)
     if ext == ".docx":
         try:
@@ -47,6 +50,24 @@ def load(path: str | Path) -> Document:
         lines = text.splitlines()
         return Document(p.name, text, lines, [0] * len(lines))
     raise ValueError(f"Неподдерживаемый формат: {ext}. Поддерживаются .pdf, .md, .txt, .docx")
+
+
+def _mark_pdf_headings(raw: list[tuple[str, float, int]]) -> tuple[list[str], list[int]]:
+    """Строки, набранные шрифтом крупнее основного текста, помечаются как markdown-заголовки
+    (# — самый крупный размер), чтобы нарезка по разделам работала так же, как для .md."""
+    from collections import Counter
+
+    if not raw:
+        return [], []
+    body = Counter(sz for _, sz, _ in raw).most_common(1)[0][0]
+    head_sizes = sorted({sz for t, sz, _ in raw if sz > body + 0.5}, reverse=True)[:6]
+    lines, pages = [], []
+    for text, sz, page in raw:
+        if sz in head_sizes and len(text) < 120:
+            text = "#" * (head_sizes.index(sz) + 1) + " " + text.strip()
+        lines.append(text)
+        pages.append(page)
+    return lines, pages
 
 
 _PUNCT = str.maketrans({"«": '"', "»": '"', "“": '"', "”": '"', "„": '"', "’": "'", "‘": "'",
