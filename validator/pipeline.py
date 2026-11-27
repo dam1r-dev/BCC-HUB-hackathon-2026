@@ -313,7 +313,10 @@ def review(llm: LLM, doc: Document, findings: list[Finding]) -> tuple[list[Findi
         drops = [n for n, v in verdicts.items() if n < len(part) and str(v.get("verdict")).lower() == "drop"
                  and part[n].severity != "critical"]
         if len(drops) > REVIEW_MAX_DROP * len(part):
-            _log(f"   ревизор хотел отбросить {len(drops)} из {len(part)} — подозрительно, отбрасывание не применяю")
+            # слишком много «drop» — не выбрасываем, но и не оставляем как было: сомнительные понижаем до minor
+            _log(f"   ревизор хотел отбросить {len(drops)} из {len(part)} — не отбрасываю, понижаю до незначительных")
+            for n in drops:
+                verdicts[n] = {**verdicts[n], "verdict": "keep", "severity": "minor"}
             drops = []
         for n, v in verdicts.items():
             if n >= len(part):
