@@ -19,7 +19,7 @@ except ImportError as _e:
 from . import __version__
 from .ingest import DocumentError, QuoteIndex, load
 from .llm import LLM, LLMError
-from .pipeline import ROOT, PROMPTS, check_requirements, check_set, consolidate, dedupe, extract, make_verdict, review, rule_checks, verify
+from .pipeline import ROOT, PROMPTS, check_requirements, check_set, consolidate, dedupe, extract, calibrate, make_verdict, review, rule_checks, verify
 from .report import render, render_error, render_error_html, render_html
 from .schema import Passport, Report
 
@@ -121,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
     keep = {id(f) for f in reviewed}
     per_req = [f for f in per_req if id(f) in keep]
     per_set = [f for f in per_set if id(f) in keep]
+    capped = calibrate(per_req + per_set)
     raw_total = len(per_req) + len(per_set)
     per_req, per_set = consolidate(per_req, per_set)
 
@@ -137,6 +138,7 @@ def main(argv: list[str] | None = None) -> int:
         "quotes_dropped": len(dropped),
         "dropped_examples": [f.quote[:120] for f in dropped[:5]],
         "review_dropped": len(rejected),
+        "severity_capped": capped,
         "review_rejected": rejected,
         "warnings": doc.warnings + ([f"Цитаты {sum(not r.quote_verified for r in reqs)} требований не найдены "
                                      "в документе дословно, место для них не указано."]

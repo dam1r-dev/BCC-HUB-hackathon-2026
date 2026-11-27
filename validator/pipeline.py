@@ -332,6 +332,23 @@ def review(llm: LLM, doc: Document, findings: list[Finding]) -> tuple[list[Findi
     return kept, rejected
 
 
+# потолок критичности по виду дефекта: дубль, «две мысли в одном пункте», термин не ломают реализацию,
+# отсутствие приоритетов или трассировки не делает требования противоречивыми
+CEILING_REQ = {"necessary": "minor", "singular": "minor", "modifiable": "minor", "comprehensible": "minor"}
+CEILING_ANY = {"ranked": "major", "traceable": "major", "validatable": "major", "modifiable": "minor"}
+
+
+def calibrate(findings: list[Finding]) -> int:
+    """Жёсткие правила критичности поверх оценки модели; возвращает число понижений."""
+    changed = 0
+    for f in findings:
+        cap = CEILING_ANY.get(f.criterion) or (CEILING_REQ.get(f.criterion) if f.scope == "requirement" else None)
+        if cap and ORDER.get(f.severity, 9) < ORDER[cap]:
+            f.severity = cap
+            changed += 1
+    return changed
+
+
 def consolidate(per_req: list[Finding], per_set: list[Finding]) -> tuple[list[Finding], list[Finding]]:
     """Сокращает шум без потери информации: замечание того же вида на том же месте и лишние замечания
     к одному требованию вкладываются в главное (поле related), а не удаляются.

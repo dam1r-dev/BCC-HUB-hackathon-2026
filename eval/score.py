@@ -71,6 +71,21 @@ def main() -> int:
     print("Строго, критичные: " + ", ".join(f"{g['id']}{'+' if g in strict else '-'}" for g in crit))
     print(f"Из них критичных: {len(crit_hit)} из {len(crit)}")
     print(f"Замечаний у агента: главных {len(main)}, вместе с вложенными {len(found)}")
+    # калибровка: совпадает ли критичность агента с эталонной у найденных дефектов
+    order = {"critical": 0, "major": 1, "minor": 2}
+    same = near = 0
+    for g in hit:
+        sevs = [f.get("severity") for f in found if gmatch(g, f["quote"])]
+        d = min(abs(order.get(s_, 1) - order.get(g.get("severity"), 1)) for s_ in sevs)
+        same += d == 0
+        near += d <= 1
+    if hit:
+        print(f"Критичность совпала с эталоном: {same} из {len(hit)} ({same / len(hit):.0%}), "
+              f"с разницей не больше уровня: {near} из {len(hit)}")
+    dist = {k: sum(f.get("severity") == k for f in main) for k in order}
+    print(f"Распределение у агента: критичных {dist['critical']}, существенных {dist['major']}, незначительных {dist['minor']}"
+          f" (эталон: {sum(g.get('severity') == 'critical' for g in golden)}/"
+          f"{sum(g.get('severity') == 'major' for g in golden)}/{sum(g.get('severity') == 'minor' for g in golden)})")
     if miss:
         print("\nПропущены:")
         for g in miss:
