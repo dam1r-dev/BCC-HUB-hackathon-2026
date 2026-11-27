@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from .ingest import Document, QuoteIndex
-from .llm import LLM
+from .llm import LLM, LLMError
 from .schema import CRITERIA, SEVERITIES, Finding, Requirement, Verdict
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -266,7 +266,8 @@ ORDER = {s: i for i, s in enumerate(SEVERITIES)}
 KIND = {"consistent": "contra", "correct": "contra", "comprehensible": "contra",
         "unambiguous": "vague", "verifiable": "vague",
         "complete": "gap", "conforming": "gap", "traceable": "gap",
-        "appropriate": "design", "feasible": "design", "necessary": "design", "singular": "design"}
+        "appropriate": "design", "feasible": "design", "necessary": "design", "singular": "design",
+        "validatable": "gap", "ranked": "gap", "modifiable": "design"}
 MAIN_PER_REQ = int(os.getenv("MAIN_PER_REQ", "1"))  # главных замечаний на одно требование, остальные — вложенные
 
 
@@ -277,6 +278,58 @@ def _words(s: str) -> set[str]:
 def _overlap(a: str, b: str) -> float:
     wa, wb = _words(a), _words(b)
     return len(wa & wb) / min(len(wa), len(wb)) if wa and wb else 0.0
+
+
+REVIEW = os.getenv("LLM_REVIEW", "1") != "0"   # второй взгляд: отбросить ложные замечания, выставить критичность
+REVIEW_BATCH = 40
+REVIEW_MAX_DROP = 0.4  # ревизор не может выбросить больше 40% пачки — защита от «выбросить всё»
+
+
+def review(llm: LLM, doc: Document, findings: list[Finding]) -> tuple[list[Finding], list[dict]]:
+    """Ревизия замечаний моделью: ложные и придирки отбрасываются, критичность калибруется.
+    Критичные замечания не отбрасываются и не понижаются, правила-регулярки не трогаются.
+    При сбое модели замечания остаются как были."""
+    if not REVIEW:
+        return findings, []
+    todo = [f for f in findings if f.scope != "rule"]
+    rejected: list[dict] = []
+    drop_ids: set[int] = set()
+    for i in range(0, len(todo), REVIEW_BATCH):
+        part = todo[i:i + REVIEW_BATCH]
+        _log(f"   ревизия замечаний: {i + 1}–{i + len(part)} из {len(todo)}")
+        payload = "\n".join(json.dumps({"n": n + 1, "criterion": f.criterion, "severity": f.severity,
+                                        "quote": f.quote, "explanation": f.explanation}, ensure_ascii=False)
+                            for n, f in enumerate(part))
+        try:
+            data = llm.json(_prompt("review.md", document=doc.text, findings_json=payload),
+                            label=f"review{i // REVIEW_BATCH + 1}", reasoning="medium")
+        except LLMError as e:
+            _log(f"   ревизия пропущена: {str(e)[:120]}")
+            continue
+        verdicts = {}
+        for v in _as_list(data, "items"):
+            if isinstance(v, dict) and str(v.get("n", "")).isdigit():
+                verdicts[int(v["n"]) - 1] = v
+        drops = [n for n, v in verdicts.items() if n < len(part) and str(v.get("verdict")).lower() == "drop"
+                 and part[n].severity != "critical"]
+        if len(drops) > REVIEW_MAX_DROP * len(part):
+            _log(f"   ревизор хотел отбросить {len(drops)} из {len(part)} — подозрительно, отбрасывание не применяю")
+            drops = []
+        for n, v in verdicts.items():
+            if n >= len(part):
+                continue
+            f = part[n]
+            if n in drops:
+                drop_ids.add(id(f))
+                rejected.append({"req_id": f.req_id, "criterion": f.criterion, "quote": f.quote[:160],
+                                 "reason": str(v.get("reason", ""))[:200]})
+                continue
+            sev = str(v.get("severity", "")).lower()
+            if sev in SEVERITIES and f.severity != "critical":  # критичные не понижаем: их ловит проверка набора
+                f.severity = sev
+    kept = [f for f in findings if id(f) not in drop_ids]
+    _log(f"   после ревизии: {len(kept)} из {len(findings)}, отброшено {len(rejected)}")
+    return kept, rejected
 
 
 def consolidate(per_req: list[Finding], per_set: list[Finding]) -> tuple[list[Finding], list[Finding]]:

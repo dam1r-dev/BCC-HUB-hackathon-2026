@@ -6,6 +6,7 @@ from dataclasses import dataclass, field, asdict
 CRITERIA = (
     "necessary", "appropriate", "unambiguous", "complete", "singular", "feasible",
     "verifiable", "correct", "conforming", "consistent", "traceable", "comprehensible",
+    "validatable", "ranked", "modifiable",
 )
 SEVERITIES = ("critical", "major", "minor")
 SEVERITY_RU = {"critical": "критичный", "major": "существенный", "minor": "незначительный"}
@@ -22,6 +23,9 @@ CRITERION_RU = {
     "consistent": "Непротиворечивость",
     "traceable": "Трассируемость",
     "comprehensible": "Понятность",
+    "validatable": "Валидируемость",
+    "ranked": "Ранжированность по важности и стабильности",
+    "modifiable": "Модифицируемость",
 }
 
 
