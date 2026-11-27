@@ -1,0 +1,79 @@
+# Отчёт о проверке требований
+
+## 1. Паспорт прогона
+
+| Поле | Значение |
+| :--- | :--- |
+| Документ | {{ passport.document }} |
+| Дата прогона | {{ passport.date }} |
+| Модель | {{ passport.model }} |
+| Версия агента | {{ passport.agent_version }} (коммит `{{ passport.commit }}`) |
+| Критерии | ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE Std 830-1998 п. 4.3 |
+| Проверка цитат | проверено {{ stats.quotes_checked }}, отброшено как не найденные в документе: {{ stats.quotes_dropped }} |
+
+## 2. Как агент нарезал требования
+
+Идентификаторы R01… присвоены агентом. «Место» — позиция цитаты в исходном документе.
+
+| ID в отчёте | ID в документе | Раздел | Краткая формулировка (цитата) | Место |
+| :--- | :--- | :--- | :--- | :--- |
+{% for r in requirements %}
+| {{ r.id }} | {{ (r.doc_id or "—") | cell }} | {{ r.section | cell }} | {{ r.quote | short | cell }} | {{ r.location or "не найдено" }} |
+{% endfor %}
+
+## 3. Проверка каждого требования
+
+{% for r in requirements %}
+{% set fs = by_req.get(r.id, []) %}
+### {{ r.id }}{% if r.doc_id %} ({{ r.doc_id }}){% endif %} — {% if fs %}нарушений: {{ fs | length }}{% else %}нарушений не найдено{% endif %}
+
+> {{ r.quote | short(300) }}
+
+{% for f in fs %}
+- **{{ f.criterion | crit }}** · {{ f.severity | sev }} · {{ f.location }}
+  - Цитата: «{{ f.quote }}»
+  - Проблема: {{ f.explanation }}
+  - Исправить: {{ f.fix }}
+{% endfor %}
+
+{% endfor %}
+## 4. Проверка всего набора требований
+
+{% if set_findings %}
+| # | Критерий | Критичность | Затронуто | Цитата и место | Проблема | Исправить |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+{% for f in set_findings %}
+| S{{ loop.index }} | {{ f.criterion | crit }} | {{ f.severity | sev }} | {{ f.req_id | cell }} | «{{ f.quote | cell }}» ({{ f.location }}) | {{ f.explanation | cell }} | {{ f.fix | cell }} |
+{% endfor %}
+{% else %}
+Нарушений на уровне набора не найдено.
+{% endif %}
+
+## 5. Сводка
+
+| Показатель | Значение |
+| :--- | :--- |
+| Требований выделено | {{ stats.requirements }} |
+| Нарушений всего | {{ stats.findings }} |
+| Критичных | {{ stats.critical }} |
+| Существенных | {{ stats.major }} |
+| Незначительных | {{ stats.minor }} |
+
+### Критичные дефекты
+
+{% for f in critical %}
+{{ loop.index }}. **{{ f.criterion | crit }}** [{{ f.req_id }}, {{ f.location }}] — «{{ f.quote | short(160) }}». {{ f.explanation }}
+{% else %}
+Критичных дефектов не найдено.
+{% endfor %}
+
+## 6. Итог
+
+**{% if verdict.ready %}Документ можно передавать в разработку и тестирование.{% else %}Документ НЕ готов к разработке и тестированию.{% endif %}**
+
+{{ verdict.summary }}
+
+Что исправить в первую очередь:
+{% for t in verdict.top_fixes %}
+{{ loop.index }}. {{ t }}
+{% endfor %}
