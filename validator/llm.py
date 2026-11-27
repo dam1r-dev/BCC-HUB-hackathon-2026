@@ -71,6 +71,9 @@ class LLM:
                 if re.match(r"^(401|403|404)\b", str(e)) or any(c in str(e) for c in ("PERMISSION_DENIED", "API_KEY_INVALID", "model_not_found", "invalid_api_key")):
                     raise LLMError(f"Провайдер отклонил запрос (ключ или доступ): {str(e)[:300]}") from e
                 wait = _retry_delay(e, attempt)
+                if any(c in str(e) for c in ("per day", "insufficient_quota", "exceeded your current quota")) or wait > 180:
+                    raise LLMError(f"Исчерпан лимит провайдера (суточный или по оплате), повторы не помогут — "
+                                   f"смените ключ/модель или дождитесь сброса: {str(e)[:300]}") from e
                 print(f"  [{label}] попытка {attempt + 1} не удалась: {str(e)[:160]} — жду {wait:.0f} с", file=sys.stderr)
                 time.sleep(wait)
         raise LLMError(f"Модель не ответила после повторов ({label}): {last_err}")
@@ -151,5 +154,5 @@ def _retry_delay(e: Exception, attempt: int) -> float:
     if m:
         return float(m.group(1)) + 2
     if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
-        return 20 * (attempt + 1)
-    return 3 * (2 ** attempt)
+        return min(20 * (attempt + 1), 90)
+    return min(3 * (2 ** attempt), 60)
