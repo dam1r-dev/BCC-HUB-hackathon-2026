@@ -10,7 +10,7 @@
 | Версия агента | {{ passport.agent_version }} (коммит `{{ passport.commit }}`) |
 | Критерии | ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE Std 830-1998 п. 4.3 |
 | Проверка цитат | проверено {{ stats.quotes_checked }}, отброшено как не найденные в документе: {{ stats.quotes_dropped }} |
-{% if stats.review_dropped is defined %}| Ревизия замечаний | повторная проверка моделью: отброшено как ложные или придирки — {{ stats.review_dropped }}, критичность пересмотрена |
+{% if stats.review_dropped is defined %}| Ревизия замечаний | повторная проверка моделью: отброшено как ложные или придирки — {{ stats.review_dropped }}; критичность выставлена по единой шкале{% if stats.severity_capped %}, понижено по правилам — {{ stats.severity_capped }}{% endif %} |
 {% endif %}{% if stats.warnings %}
 
 **Предупреждения о чтении документа:**
@@ -38,6 +38,9 @@
 > {{ r.quote | short(300) }}
 
 {% for f in fs %}
+{% if f.severity == "minor" and not f.related %}
+- *{{ f.criterion | crit }} · незначительное · {{ f.location }}*: «{{ f.quote | short(120) }}» — {{ f.explanation }} → {{ f.fix }}
+{% else %}
 - **{{ f.criterion | crit }}** · {{ f.severity | sev }} · {{ f.location }}
   - Цитата: «{{ f.quote }}»
   - Проблема: {{ f.explanation }}
@@ -47,6 +50,7 @@
 {% for x in f.related %}
     - *{{ x.criterion | crit }}, {{ x.severity | sev }}*: {{ x.explanation }} → {{ x.fix }}
 {% endfor %}
+{% endif %}
 {% endif %}
 {% endfor %}
 
@@ -73,6 +77,8 @@
 | Критичных | {{ stats.critical }} |
 | Существенных | {{ stats.major }} |
 | Незначительных | {{ stats.minor }} |
+
+Шкала: **критичный** — исполнители гарантированно сделают по-разному, требование не проверить или есть риск для денег и данных; **существенный** — до разработки нужен ответ аналитика; **незначительный** — формулировка, термин, дубль, на код и тесты не влияет.
 
 ### Критичные дефекты
 
